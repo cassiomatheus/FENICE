@@ -10,7 +10,7 @@ class ClaimExtractor:
         self,
         model_name: str = "Babelscape/t5-base-summarization-claim-extractor",
         device: str = "cuda:0",
-        batch_size: int = 70,
+        batch_size: int = 32,
     ):
         self.device = device
         # load model from HF

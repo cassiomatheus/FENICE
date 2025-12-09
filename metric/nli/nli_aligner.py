@@ -8,9 +8,9 @@ class NLIAligner:
     def __init__(
         self,
         model_name: str = "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli",
-        batch_size: int = 32,
+        batch_size: int = 16,
         device: str = "cuda:0",
-        max_length: int = 512,
+        max_length: int = 256,
         **kwargs,
     ):
         self.model_name = model_name
