@@ -6,7 +6,8 @@ from metric.claim_extractor.claim_extractor import ClaimExtractor
 from metric.coreference_resolution.coreference_resolution import CoreferenceResolution
 from metric.nli.nli_aligner import NLIAligner
 from metric.utils.utils import split_into_paragraphs, split_into_sentences_batched
-
+from metric.utils.utils import nlp  # Importa o modelo spaCy carregado
+import spacy
 
 class FENICE:
     def __init__(
@@ -41,21 +42,31 @@ class FENICE:
         self.nli_max_length = nli_max_length
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    def classify_error(self, probs):
+    def classify_error(self, probs, summary_claim=None, source_text=None):
         """
-        Classifica o tipo de erro baseado nas probabilidades NLI [Entailment, Contradiction, Neutral]
+        Classifica o erro usando probabilidades NLI + Análise Linguística
         """
+        if not probs:
+            return "Desconhecido"
+            
+        # probs: [Entailment, Contradiction, Neutral]
         ent, contr, neut = probs
+        max_idx = np.argmax(probs)
         
-        # Definimos o índice da maior probabilidade
-        max_idx = np.argmax([ent, contr, neut])
-        
-        if max_idx == 0:
-            return "supported" # Factualmente correto
+        # 1. Factual (Supported)
+        if max_idx == 0: 
+            return "Factual"
+            
+        # 2. Extrínseco (Neutral - Alucinação de info nova)
+        elif max_idx == 2:
+            return "Extrínseco"
+            
+        # 3. Contradição (Analisa o subtipo)
         elif max_idx == 1:
-            return "contradiction" # Erro Intrínseco (Diz o oposto)
-        else:
-            return "hallucination" # Erro Extrínseco (Não mencionado)
+            if summary_claim and source_text:
+                return self.analyze_contradiction_type(summary_claim, source_text)
+            else:
+                return "Intrínseco" # Fallback se não tiver texto
 
     def _score(self, sample_id: int, document: str, summary: str):
         doc_id = self.get_id(sample_id, document)
@@ -148,11 +159,23 @@ class FENICE:
             # Pega o melhor alinhamento
             alignment = self.max_alignment(sample_alignments)
             
-            # --- NOVA LÓGICA DE CATEGORIZAÇÃO ---
-            if "probs" in alignment:
-                category = self.classify_error(alignment["probs"])
-                alignment["error_category"] = category # Salva na claim individual
-                error_counts[category] += 1
+            # --- CLASSIFICAÇÃO GRANULAR DE ERRO ---
+            if alignment and "probs" in alignment:
+                # Recupera os textos necessários
+                claim_text = alignment.get("summary_claim")
+                source_text = alignment.get("source_passage")
+                
+                # Chama a classificação passando os textos
+                category = self.classify_error(
+                    alignment["probs"], 
+                    summary_claim=claim_text, 
+                    source_text=source_text
+                )
+                
+                alignment["error_category"] = category
+                
+                # Atualiza contadores (usando .get para inicializar se a categoria for nova)
+                error_counts[category] = error_counts.get(category, 0) + 1
             # ------------------------------------
             
             alignments.append(alignment)
@@ -488,3 +511,64 @@ class FENICE:
             )
         else:
             return None
+
+    def analyze_contradiction_type(self, summary_claim: str, source_text: str) -> str:
+        """
+        Refina o tipo de erro quando o NLI detecta uma contradição.
+        Ordem de prioridade: Entidade > Correferência > Predicado > Intrínseco (Adjetivos/Outros)
+        """
+        # Processa os textos com spaCy
+        doc_sum = nlp(summary_claim)
+        doc_src = nlp(source_text)
+
+        # 1. ERRO DE ENTIDADE (Números, Nomes Próprios, Datas, Dinheiro)
+        # Extrai entidades nomeadas e números soltos
+        ents_sum = {(e.text.lower(), e.label_) for e in doc_sum.ents}
+        nums_sum = {t.text for t in doc_sum if t.pos_ == "NUM"}
+        
+        # Verifica se as entidades do resumo estão presentes no texto fonte
+        # (Lógica simplificada: se o resumo tem um número/nome que não está na fonte, é erro de entidade)
+        src_text_lower = source_text.lower()
+        for text, label in ents_sum:
+            if text not in src_text_lower:
+                return "Entidade"
+        
+        for num in nums_sum:
+            if num not in src_text_lower:
+                return "Entidade"
+
+        # 2. ERRO DE CORREFERÊNCIA (Pronomes e Sujeitos)
+        # Verifica se há pronomes no resumo que podem estar mal atribuídos
+        pronouns_sum = [t.text.lower() for t in doc_sum if t.pos_ == "PRON"]
+        if pronouns_sum:
+            # Se tem pronome e deu contradição, há alta chance de ser correferência errada
+            # (Heurística: o NLI flagrou conflito e o foco da frase é um pronome)
+            return "Correferência"
+            
+        # Comparação de Sujeitos (nsubj)
+        subjs_sum = [t.lemma_ for t in doc_sum if t.dep_ == "nsubj"]
+        subjs_src = [t.lemma_ for t in doc_src if t.dep_ == "nsubj"]
+        # Se os sujeitos são substantivos (não pronomes) e são diferentes
+        if subjs_sum and subjs_src:
+            if not set(subjs_sum).intersection(set(subjs_src)):
+                 return "Correferência"
+
+        # 3. ERRO DE PREDICADO (Verbos e Negação)
+        # Compara os verbos principais (roots)
+        verbs_sum = {t.lemma_ for t in doc_sum if t.pos_ == "VERB"}
+        verbs_src = {t.lemma_ for t in doc_src if t.pos_ == "VERB"}
+        
+        # Se não há interseção entre os verbos principais, assumimos troca de ação
+        if verbs_sum and not verbs_sum.intersection(verbs_src):
+            return "Predicado"
+            
+        # Verifica partículas de negação (not, never, no)
+        neg_sum = any(t.dep_ == "neg" for t in doc_sum)
+        neg_src = any(t.dep_ == "neg" for t in doc_src)
+        if neg_sum != neg_src:
+            return "Predicado"
+
+        # 4. INTRÍNSECO (Default)
+        # Se passou por tudo (entidades batem, sujeitos batem, verbos batem),
+        # sobraram Adjetivos (Azul vs Vermelho) ou Adverbios.
+        return "Intrínseco"
