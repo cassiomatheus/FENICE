@@ -42,31 +42,6 @@ class FENICE:
         self.nli_max_length = nli_max_length
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    def classify_error(self, probs, summary_claim=None, source_text=None):
-        """
-        Classifica o erro usando probabilidades NLI + Análise Linguística
-        """
-        if not probs:
-            return "Desconhecido"
-            
-        # probs: [Entailment, Contradiction, Neutral]
-        ent, contr, neut = probs
-        max_idx = np.argmax(probs)
-        
-        # 1. Factual (Supported)
-        if max_idx == 0: 
-            return "Factual"
-            
-        # 2. Extrínseco (Neutral - Alucinação de info nova)
-        elif max_idx == 2:
-            return "Extrínseco"
-            
-        # 3. Contradição (Analisa o subtipo)
-        elif max_idx == 1:
-            if summary_claim and source_text:
-                return self.analyze_contradiction_type(summary_claim, source_text)
-            else:
-                return "Intrínseco" # Fallback se não tiver texto
 
     def _score(self, sample_id: int, document: str, summary: str):
       # ======== Preparação ========
@@ -164,7 +139,11 @@ class FENICE:
           ]
   
           # --- Melhor alinhamento (para score) ---
-          alignment = self.max_alignment(sample_alignments)
+          #alignment = self.max_alignment(sample_alignments)
+          best_alignment = self.max_alignment(sample_alignments)
+          alignment = best_alignment.copy()
+          alignment["all_alignments"] = sample_alignments
+
   
           # ======== CLASSIFICAÇÃO FACTUAL CORRETA ========
           statuses = []
@@ -185,12 +164,20 @@ class FENICE:
   
           # ======== CLASSIFICAÇÃO DO TIPO DE ERRO ========
           if final_status == "contradicted":
-              error_type = self.classify_error_type(
+              error_types = self.classify_error_type(
                   alignment["summary_claim"],
                   alignment["source_passage"],
               )
-              alignment["error_type"] = error_type
-              error_type_counts[error_type] += 1
+              
+              # erro principal (para análises simples)
+              alignment["error_type"] = error_types[0]
+              
+              # todos os erros detectados (para análise avançada)
+              alignment["error_types_all"] = error_types
+              
+              # contagem: conta TODOS os tipos detectados
+              for et in error_types:
+                  error_type_counts[et] += 1
           else:
               alignment["error_type"] = None
   
@@ -547,67 +534,6 @@ class FENICE:
         else:
             return None
 
-    def analyze_contradiction_type(self, summary_claim: str, source_text: str) -> str:
-        """
-        Refina o tipo de erro quando o NLI detecta uma contradição.
-        Ordem de prioridade: Entidade > Correferência > Predicado > Intrínseco (Adjetivos/Outros)
-        """
-        # Processa os textos com spaCy
-        doc_sum = nlp(summary_claim)
-        doc_src = nlp(source_text)
-
-        # 1. ERRO DE ENTIDADE (Números, Nomes Próprios, Datas, Dinheiro)
-        # Extrai entidades nomeadas e números soltos
-        ents_sum = {(e.text.lower(), e.label_) for e in doc_sum.ents}
-        nums_sum = {t.text for t in doc_sum if t.pos_ == "NUM"}
-        
-        # Verifica se as entidades do resumo estão presentes no texto fonte
-        # (Lógica simplificada: se o resumo tem um número/nome que não está na fonte, é erro de entidade)
-        src_text_lower = source_text.lower()
-        for text, label in ents_sum:
-            if text not in src_text_lower:
-                return "Entidade"
-        
-        for num in nums_sum:
-            if num not in src_text_lower:
-                return "Entidade"
-
-        # 2. ERRO DE CORREFERÊNCIA (Pronomes e Sujeitos)
-        # Verifica se há pronomes no resumo que podem estar mal atribuídos
-        pronouns_sum = [t.text.lower() for t in doc_sum if t.pos_ == "PRON"]
-        if pronouns_sum:
-            # Se tem pronome e deu contradição, há alta chance de ser correferência errada
-            # (Heurística: o NLI flagrou conflito e o foco da frase é um pronome)
-            return "Correferência"
-            
-        # Comparação de Sujeitos (nsubj)
-        subjs_sum = [t.lemma_ for t in doc_sum if t.dep_ == "nsubj"]
-        subjs_src = [t.lemma_ for t in doc_src if t.dep_ == "nsubj"]
-        # Se os sujeitos são substantivos (não pronomes) e são diferentes
-        if subjs_sum and subjs_src:
-            if not set(subjs_sum).intersection(set(subjs_src)):
-                 return "Correferência"
-
-        # 3. ERRO DE PREDICADO (Verbos e Negação)
-        # Compara os verbos principais (roots)
-        verbs_sum = {t.lemma_ for t in doc_sum if t.pos_ == "VERB"}
-        verbs_src = {t.lemma_ for t in doc_src if t.pos_ == "VERB"}
-        
-        # Se não há interseção entre os verbos principais, assumimos troca de ação
-        if verbs_sum and not verbs_sum.intersection(verbs_src):
-            return "Predicado"
-            
-        # Verifica partículas de negação (not, never, no)
-        neg_sum = any(t.dep_ == "neg" for t in doc_sum)
-        neg_src = any(t.dep_ == "neg" for t in doc_src)
-        if neg_sum != neg_src:
-            return "Predicado"
-
-        # 4. INTRÍNSECO (Default)
-        # Se passou por tudo (entidades batem, sujeitos batem, verbos batem),
-        # sobraram Adjetivos (Azul vs Vermelho) ou Adverbios.
-        return "Intrínseco"
-
     def classify_factual_status(self, probs, ent_th=0.7, contr_th=0.6):
       """
       Classifica o status factual de uma claim com base nas probabilidades NLI.
@@ -625,11 +551,21 @@ class FENICE:
       else:
           return "not_supported"
     
-    def classify_error_type(self, summary_claim: str, source_text: str) -> str:
+
+    def classify_error_type(self, summary_claim: str, source_text: str):
       """
-      Classifica o tipo de erro factual SOMENTE se houver contradição.
-      Retorna: entity | predicate | coreference | other
+      Classifica tipos de erro factual para claims CONTRADITAS.
+      Retorna uma lista ordenada de tipos de erro (principal primeiro).
+
+      Tipos possíveis:
+      - entity
+      - predicate
+      - coreference
+      - other
       """
+
+      TH = 0.5  # limiar mínimo para considerar um erro ativo
+
       scores = {
           "entity": 0.0,
           "predicate": 0.0,
@@ -638,48 +574,70 @@ class FENICE:
       }
 
       doc_sum = nlp(summary_claim)
-      doc_src = nlp(source_text.lower())
+      doc_src = nlp(source_text)
 
-      # ========= ERRO DE ENTIDADE =========
-      sum_entities = {(e.text.lower(), e.label_) for e in doc_sum.ents}
-      src_text = source_text.lower()
+      # =====================================================
+      # ERRO DE ENTIDADE (corrigido: não literal)
+      # =====================================================
+      src_tokens = {t.lemma_.lower() for t in doc_src if t.is_alpha}
 
-      for ent_text, ent_label in sum_entities:
-          if ent_text not in src_text:
+      for ent in doc_sum.ents:
+          ent_tokens = {t.lemma_.lower() for t in ent if t.is_alpha}
+
+          if ent_tokens and not ent_tokens.intersection(src_tokens):
               scores["entity"] += 0.6
 
+      # números (datas, valores)
       sum_numbers = {t.text for t in doc_sum if t.pos_ == "NUM"}
-      for num in sum_numbers:
-          if num not in src_text:
-              scores["entity"] += 0.4
+      src_numbers = {t.text for t in doc_src if t.pos_ == "NUM"}
 
-      # ========= ERRO DE CORREFERÊNCIA =========
-      pronouns = [t.text.lower() for t in doc_sum if t.pos_ == "PRON"]
-      if pronouns:
-          scores["coreference"] += 0.3  # evidência fraca, não decisiva
+      if sum_numbers and not sum_numbers.intersection(src_numbers):
+          scores["entity"] += 0.4
 
-      sum_subj = {t.lemma_ for t in doc_sum if t.dep_ == "nsubj"}
-      src_subj = {t.lemma_ for t in doc_src if t.dep_ == "nsubj"}
-      if sum_subj and src_subj and not sum_subj.intersection(src_subj):
-          scores["coreference"] += 0.5
-
-      # ========= ERRO DE PREDICADO =========
-      sum_verbs = {t.lemma_ for t in doc_sum if t.pos_ == "VERB"}
-      src_verbs = {t.lemma_ for t in doc_src if t.pos_ == "VERB"}
+      # =====================================================
+      # ERRO DE PREDICADO (verbo / polaridade)
+      # =====================================================
+      sum_verbs = {t.lemma_.lower() for t in doc_sum if t.pos_ == "VERB"}
+      src_verbs = {t.lemma_.lower() for t in doc_src if t.pos_ == "VERB"}
 
       if sum_verbs and not sum_verbs.intersection(src_verbs):
           scores["predicate"] += 0.6
 
       neg_sum = any(t.dep_ == "neg" for t in doc_sum)
       neg_src = any(t.dep_ == "neg" for t in doc_src)
+
       if neg_sum != neg_src:
           scores["predicate"] += 0.4
 
-      # ========= DECISÃO FINAL =========
-      best_type = max(scores, key=scores.get)
+      # =====================================================
+      # ERRO DE CORREFERÊNCIA (corrigido: condicionado)
+      # =====================================================
+      pronouns = [t for t in doc_sum if t.pos_ == "PRON"]
 
-      if scores[best_type] >= 0.5:
-          return best_type
-      else:
-          return "other"
+      if pronouns:
+          sum_subjects = {
+              t.lemma_.lower()
+              for t in doc_sum
+              if t.dep_ == "nsubj" and t.pos_ != "PRON"
+          }
+          src_subjects = {
+              t.lemma_.lower()
+              for t in doc_src
+              if t.dep_ == "nsubj"
+          }
 
+          if sum_subjects and not sum_subjects.intersection(src_subjects):
+              scores["coreference"] += 0.7
+
+      # =====================================================
+      # DECISÃO FINAL (PROBLEMA 4 resolvido aqui)
+      # =====================================================
+      active_errors = [k for k, v in scores.items() if v >= TH]
+
+      if not active_errors:
+          return ["other"]
+
+      # ordena por força da evidência
+      active_errors = sorted(active_errors, key=lambda k: scores[k], reverse=True)
+
+      return active_errors
