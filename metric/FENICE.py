@@ -69,129 +69,164 @@ class FENICE:
                 return "Intrínseco" # Fallback se não tiver texto
 
     def _score(self, sample_id: int, document: str, summary: str):
-        doc_id = self.get_id(sample_id, document)
-        sentences_offsets = self.sentences_cache[doc_id]
-        sentences = [s[0] for s in sentences_offsets]
-        offsets = [(s[1], s[2]) for s in sentences_offsets]
-        
-        # paragraphs processing (mantém o código original de parágrafos)
-        paragraphs = split_into_paragraphs(
-            sentences,
-            self.num_sent_per_paragraph,
-            sliding_paragraphs=self.sliding_paragraphs,
-            sliding_stride=self.sliding_stride,
-        )
-        
-        # claim extraction
-        summary_id = self.get_id(sample_id, summary)
-        summary_claims = self.claims_cache.get(summary_id, [summary])
-        alignments = []
+      # ======== Preparação ========
+      doc_id = self.get_id(sample_id, document)
+      sentences_offsets = self.sentences_cache[doc_id]
+      sentences = [s[0] for s in sentences_offsets]
+      offsets = [(s[1], s[2]) for s in sentences_offsets]
+  
+      paragraphs = split_into_paragraphs(
+          sentences,
+          self.num_sent_per_paragraph,
+          sliding_paragraphs=self.sliding_paragraphs,
+          sliding_stride=self.sliding_stride,
+      )
+  
+      summary_id = self.get_id(sample_id, summary)
+      summary_claims = self.claims_cache.get(summary_id, [summary])
+  
+      alignments = []
+  
+      # ======== Contadores CORRETOS ========
+      status_counts = {
+          "supported": 0,
+          "contradicted": 0,
+          "not_supported": 0,
+      }
+  
+      error_type_counts = {
+          "entity": 0,
+          "predicate": 0,
+          "coreference": 0,
+          "other": 0,
+      }
+  
+      # ======== Loop por claim ========
+      for claim_id, claim in enumerate(summary_claims):
+      
+          # --- Sentence-level alignment ---
+          sentence_level_alignment = self.get_alignment(
+              premises=sentences,
+              hypothesis=claim,
+              sample_id=sample_id,
+              hypothesis_id=claim_id,
+          )
+  
+          # --- Coreference alignment ---
+          coref_alignment = None
+          if self.use_coref:
+              coref_clusters = self.coref_clusters_cache[doc_id]
+              coref_premises = self.coref_model.get_coref_versions(
+                  sentence=sentence_level_alignment["source_passage"],
+                  text=document,
+                  sentences=sentences,
+                  offsets=offsets,
+                  clusters=coref_clusters,
+              )
+              if coref_premises:
+                  coref_alignment = self.get_alignment(
+                      premises=coref_premises,
+                      hypothesis=claim,
+                      sample_id=sample_id,
+                      hypothesis_id=claim_id,
+                      alignment_prefix="coref",
+                  )
+  
+          # --- Paragraph-level alignment ---
+          paragraph_level_alignment = None
+          if len(paragraphs) > 1 and self.paragraph_level_nli:
+              paragraph_level_alignment = self.get_alignment(
+                  premises=paragraphs,
+                  hypothesis=claim,
+                  sample_id=sample_id,
+                  hypothesis_id=claim_id,
+                  alignment_prefix="par",
+              )
+  
+          # --- Document-level alignment ---
+          doc_level_alignment = None
+          if self.doc_level_nli:
+              doc_level_alignment = self.get_alignment(
+                  premises=[document],
+                  hypothesis=claim,
+                  sample_id=sample_id,
+                  hypothesis_id=claim_id,
+                  alignment_prefix="doc",
+              )
+              doc_level_alignment["source_passage"] = "DOCUMENT"
+  
+          # --- Coleta de todos os alinhamentos ---
+          sample_alignments = [
+              sentence_level_alignment,
+              coref_alignment,
+              paragraph_level_alignment,
+              doc_level_alignment,
+          ]
+  
+          # --- Melhor alinhamento (para score) ---
+          alignment = self.max_alignment(sample_alignments)
+  
+          # ======== CLASSIFICAÇÃO FACTUAL CORRETA ========
+          statuses = []
+  
+          for al in sample_alignments:
+              if al and "probs" in al:
+                  statuses.append(self.classify_factual_status(al["probs"]))
+  
+          # decisão final do status
+          if statuses and all(s == "not_supported" for s in statuses):
+              final_status = "not_supported"
+          else:
+              priority = {"supported": 2, "contradicted": 1, "not_supported": 0}
+              final_status = max(statuses, key=lambda s: priority[s])
+  
+          alignment["factual_status"] = final_status
+          status_counts[final_status] += 1
+  
+          # ======== CLASSIFICAÇÃO DO TIPO DE ERRO ========
+          if final_status == "contradicted":
+              error_type = self.classify_error_type(
+                  alignment["summary_claim"],
+                  alignment["source_passage"],
+              )
+              alignment["error_type"] = error_type
+              error_type_counts[error_type] += 1
+          else:
+              alignment["error_type"] = None
+  
+          alignments.append(alignment)
+  
+      # ======== SCORE GLOBAL ========
+      score = float(np.mean([al["score"] for al in alignments])) if alignments else 0.0
+  
+      # ======== PROPORÇÕES CORRETAS ========
+      total_claims = max(len(summary_claims), 1)
+      total_contradicted = max(status_counts["contradicted"], 1)
+  
+      status_ratios = {
+          k: v / total_claims
+          for k, v in status_counts.items()
+      }
+  
+      error_type_ratios = {
+          k: v / total_contradicted
+          for k, v in error_type_counts.items()
+      }
+  
+      # ======== RETORNO FINAL ========
+      return {
+          "score": score,
+          "status_counts": status_counts,
+          "status_ratios": status_ratios,
+          "error_type_counts": error_type_counts,
+          "error_type_ratios": error_type_ratios,
+          "alignments": alignments,
+      }
+  
+  
+  
 
-        # Inicializa contadores de erro
-        error_counts = {
-            "supported": 0,
-            "contradiction": 0,
-            "hallucination": 0
-        }
 
-        for claim_id, claim in enumerate(summary_claims):
-            # ... (código existente de sentence_level_alignment) ...
-            sentence_level_alignment = self.get_alignment(
-                premises=sentences,
-                hypothesis=claim,
-                sample_id=sample_id,
-                hypothesis_id=claim_id,
-            )
-            
-            # ... (código existente de coref_alignment) ...
-            coref_alignment = None
-            if self.use_coref:
-                 # ... (lógica original do coref mantida aqui) ...
-                 # Certifique-se de manter a lógica de coref_premises original
-                 # Apenas simplifiquei aqui para focar na mudança
-                 coref_clusters = self.coref_clusters_cache[doc_id]
-                 coref_premises = self.coref_model.get_coref_versions(
-                    sentence=sentence_level_alignment["source_passage"],
-                    text=document,
-                    sentences=sentences,
-                    offsets=offsets,
-                    clusters=coref_clusters,
-                )
-                 if coref_premises:
-                    coref_alignment = self.get_alignment(
-                        sample_id=sample_id,
-                        hypothesis_id=claim_id,
-                        hypothesis=claim,
-                        premises=coref_premises,
-                        alignment_prefix="coref",
-                    )
-
-            # ... (código existente de paragraph_level_alignment) ...
-            paragraph_level_alignment = None
-            if len(paragraphs) > 1 and self.paragraph_level_nli:
-                paragraph_level_alignment = self.get_alignment(
-                    premises=paragraphs,
-                    hypothesis=claim,
-                    sample_id=sample_id,
-                    hypothesis_id=claim_id,
-                    alignment_prefix="par",
-                )
-
-            # ... (código existente de doc_level_alignment) ...
-            doc_level_alignment = None
-            if self.doc_level_nli and len(paragraphs) > 1:
-                doc_level_alignment = self.get_alignment(
-                    hypothesis=claim,
-                    premises=[document],
-                    sample_id=sample_id,
-                    hypothesis_id=claim_id,
-                    alignment_prefix="doc",
-                )
-                doc_level_alignment["source_passage"] = "DOCUMENT"
-
-            sample_alignments = [
-                sentence_level_alignment,
-                coref_alignment,
-                paragraph_level_alignment,
-                doc_level_alignment,
-            ]
-            
-            # Pega o melhor alinhamento
-            alignment = self.max_alignment(sample_alignments)
-            
-            # --- CLASSIFICAÇÃO GRANULAR DE ERRO ---
-            if alignment and "probs" in alignment:
-                # Recupera os textos necessários
-                claim_text = alignment.get("summary_claim")
-                source_text = alignment.get("source_passage")
-                
-                # Chama a classificação passando os textos
-                category = self.classify_error(
-                    alignment["probs"], 
-                    summary_claim=claim_text, 
-                    source_text=source_text
-                )
-                
-                alignment["error_category"] = category
-                
-                # Atualiza contadores (usando .get para inicializar se a categoria for nova)
-                error_counts[category] = error_counts.get(category, 0) + 1
-            # ------------------------------------
-            
-            alignments.append(alignment)
-
-        score = np.mean([al["score"] for al in alignments])
-        
-        # Calcula proporções (opcional, mas útil)
-        total_claims = len(summary_claims) if len(summary_claims) > 0 else 1
-        error_ratios = {k: v / total_claims for k, v in error_counts.items()}
-
-        return {
-            "score": score, 
-            "error_counts": error_counts, # Retorna contagem absoluta
-            "error_ratios": error_ratios, # Retorna % do resumo
-            "alignments": alignments
-        }
 
     def _score_mod(self, sample_id: int, document: str, summary: str):
         doc_id = self.get_id(sample_id, document)
@@ -572,3 +607,79 @@ class FENICE:
         # Se passou por tudo (entidades batem, sujeitos batem, verbos batem),
         # sobraram Adjetivos (Azul vs Vermelho) ou Adverbios.
         return "Intrínseco"
+
+    def classify_factual_status(self, probs, ent_th=0.7, contr_th=0.6):
+      """
+      Classifica o status factual de uma claim com base nas probabilidades NLI.
+      Retorna: supported | contradicted | not_supported
+      """
+      if probs is None:
+          return "not_supported"
+
+      ent, contr, neut = probs
+
+      if ent >= ent_th:
+          return "supported"
+      elif contr >= contr_th:
+          return "contradicted"
+      else:
+          return "not_supported"
+    
+    def classify_error_type(self, summary_claim: str, source_text: str) -> str:
+      """
+      Classifica o tipo de erro factual SOMENTE se houver contradição.
+      Retorna: entity | predicate | coreference | other
+      """
+      scores = {
+          "entity": 0.0,
+          "predicate": 0.0,
+          "coreference": 0.0,
+          "other": 0.0,
+      }
+
+      doc_sum = nlp(summary_claim)
+      doc_src = nlp(source_text.lower())
+
+      # ========= ERRO DE ENTIDADE =========
+      sum_entities = {(e.text.lower(), e.label_) for e in doc_sum.ents}
+      src_text = source_text.lower()
+
+      for ent_text, ent_label in sum_entities:
+          if ent_text not in src_text:
+              scores["entity"] += 0.6
+
+      sum_numbers = {t.text for t in doc_sum if t.pos_ == "NUM"}
+      for num in sum_numbers:
+          if num not in src_text:
+              scores["entity"] += 0.4
+
+      # ========= ERRO DE CORREFERÊNCIA =========
+      pronouns = [t.text.lower() for t in doc_sum if t.pos_ == "PRON"]
+      if pronouns:
+          scores["coreference"] += 0.3  # evidência fraca, não decisiva
+
+      sum_subj = {t.lemma_ for t in doc_sum if t.dep_ == "nsubj"}
+      src_subj = {t.lemma_ for t in doc_src if t.dep_ == "nsubj"}
+      if sum_subj and src_subj and not sum_subj.intersection(src_subj):
+          scores["coreference"] += 0.5
+
+      # ========= ERRO DE PREDICADO =========
+      sum_verbs = {t.lemma_ for t in doc_sum if t.pos_ == "VERB"}
+      src_verbs = {t.lemma_ for t in doc_src if t.pos_ == "VERB"}
+
+      if sum_verbs and not sum_verbs.intersection(src_verbs):
+          scores["predicate"] += 0.6
+
+      neg_sum = any(t.dep_ == "neg" for t in doc_sum)
+      neg_src = any(t.dep_ == "neg" for t in doc_src)
+      if neg_sum != neg_src:
+          scores["predicate"] += 0.4
+
+      # ========= DECISÃO FINAL =========
+      best_type = max(scores, key=scores.get)
+
+      if scores[best_type] >= 0.5:
+          return best_type
+      else:
+          return "other"
+
