@@ -17,15 +17,9 @@ class NLIAligner:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
         self.device = device
-        # self.model = AutoModelForSequenceClassification.from_pretrained(model_name).to(
-        #     device
-        # )
-        #Modificado aqui tbm
-        self.model = AutoModelForSequenceClassification.from_pretrained(
-                model_name,
-                torch_dtype=torch.float16
-            ).to(device)
-
+        self.model = AutoModelForSequenceClassification.from_pretrained(model_name).to(
+            device
+        )
         self.batch_size = batch_size
         self.max_length = max_length
 
