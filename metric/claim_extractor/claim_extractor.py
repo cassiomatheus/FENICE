@@ -22,9 +22,16 @@ class ClaimExtractor:
         predictions = []
         batches = list(chunks(batch, self.batch_size))
         for b in tqdm(batches, desc="Extracting claims..."):
-            tok_input = self.tokenizer.batch_encode_plus(
-                b, return_tensors="pt", padding=True
+            # tok_input = self.tokenizer.batch_encode_plus(
+            #     b, return_tensors="pt", padding=True
+            # ).to(self.device)
+            tok_input = self.tokenizer(
+                b,
+                return_tensors="pt",
+                padding=True,
+                truncation=True
             ).to(self.device)
+
             claims = self.model.generate(**tok_input)
             claims = self.tokenizer.batch_decode(claims, skip_special_tokens=True)
             claims = [split_into_sentences(c) for c in claims]

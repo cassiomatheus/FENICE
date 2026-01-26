@@ -56,14 +56,22 @@ class NLIAligner:
         return all_entailment_probs, all_contradiction_probs, all_neutral_probs
 
     def score_sample(self, batch):
-        tokenized_input_seq_pairs = self.tokenizer.batch_encode_plus(
+        # tokenized_input_seq_pairs = self.tokenizer.batch_encode_plus(
+        #     batch,
+        #     return_token_type_ids=True,
+        #     padding=True,
+        #     return_tensors="pt",
+        #     truncation=True,
+        #     max_length=self.max_length,
+        # ).to(self.device)
+        tokenized_input_seq_pairs = self.tokenizer(
             batch,
             return_token_type_ids=True,
             padding=True,
-            return_tensors="pt",
             truncation=True,
-            max_length=self.max_length,
+            return_tensors="pt"
         ).to(self.device)
+
         input_ids = tokenized_input_seq_pairs["input_ids"]
         token_type_ids = tokenized_input_seq_pairs["token_type_ids"]
         attention_mask = tokenized_input_seq_pairs["attention_mask"]
