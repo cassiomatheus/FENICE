@@ -434,6 +434,7 @@ class FENICE:
                 )
         self.cache_alignment(alignments_ids, all_pairs)
         self.nli_aligner.batch_size = 1
+        #self.nli_aligner.max_length = 4096 #Modificado aqui 4096 -> 2048
         self.nli_aligner.max_length = 4096
         self.cache_alignment(alignment_ids_doc, all_pairs_doc)
         self.nli_aligner.batch_size = self.nli_batch_size
@@ -477,8 +478,13 @@ class FENICE:
                 probabilities[0][i],
                 probabilities[1][i],
                 probabilities[2][i],
+            ) #Modificado aqui para reduzir a memoria da GPU
+            self.alignments_cache[id] = (
+                ent.detach().cpu(),
+                contr.detach().cpu(),
+                neut.detach().cpu(),
             )
-            self.alignments_cache[id] = (ent, contr, neut)
+
 
     def load_alignment_mod(
         self, alignments_ids: List[str], premises: List[str], hypothesis: str
@@ -572,7 +578,7 @@ class FENICE:
           "coreference": 0.0,
           "other": 0.0,
       }
-
+ 
       doc_sum = nlp(summary_claim)
       doc_src = nlp(source_text)
 
