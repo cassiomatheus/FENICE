@@ -69,6 +69,7 @@ class NLIAligner:
             return_token_type_ids=True,
             padding=True,
             truncation=True,
+            max_length=self.max_length,
             return_tensors="pt"
         ).to(self.device)
 

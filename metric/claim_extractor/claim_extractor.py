@@ -29,7 +29,7 @@ class ClaimExtractor:
                 b,
                 return_tensors="pt",
                 padding=True,
-                truncation=True
+                truncation=True # Testar aqui
             ).to(self.device)
 
             claims = self.model.generate(**tok_input)
