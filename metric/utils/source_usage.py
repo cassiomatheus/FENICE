@@ -2,13 +2,14 @@ from typing import List
 from sentence_transformers import SentenceTransformer, util
 from transformers import AutoTokenizer
 import matplotlib.pyplot as plt
+import torch
 
 # Tokenizer para chunking com offsets
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
 # Modelo SBERT
-sbert_model = SentenceTransformer("all-MiniLM-L6-v2")
-
+#sbert_model = SentenceTransformer("all-MiniLM-L6-v2")
+sbert_model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 
 
 def segment_document(document: str):
@@ -272,36 +273,47 @@ def compute_source_usage_chunks(alignments, document):
     }
 
 def map_claim_to_chunk_sbert(alignment, chunks, document):
-    """
-    Mapeia uma claim para o chunk mais semanticamente similar
-    usando cosine similarity (SBERT).
-    """
 
     if alignment is None:
         return None
 
-    passage = alignment.get("source_passage", None)
-    if passage is None or passage.strip() == "":
+    passage = alignment.get("source_passage", "").strip()
+    if passage == "":
         return None
 
-    passage = passage.strip()
+    # ================================
+    # 1. textos dos chunks (uma vez)
+    # ================================
+    chunk_texts = [
+        document[ch["start"]:ch["end"]].strip()
+        for ch in chunks
+        if document[ch["start"]:ch["end"]].strip()
+    ]
 
-    # Embedding da evidência
-    emb_passage = sbert_model.encode(passage, convert_to_tensor=True)
+    if len(chunk_texts) == 0:
+        return None
 
-    best_idx = None
-    best_score = -1.0
+    # ================================
+    # 2. embeddings em batch (uma vez)
+    # ================================
+    with torch.no_grad():
+        chunk_embeddings = sbert_model.encode(
+            chunk_texts,
+            batch_size=32,
+            convert_to_tensor=True,
+            show_progress_bar=False
+        )
 
-    for idx, ch in enumerate(chunks):
-        chunk_text = document[ch["start"]:ch["end"]].strip()
-        if not chunk_text:
-            continue
+        emb_passage = sbert_model.encode(
+            passage,
+            convert_to_tensor=True
+        )
 
-        emb_chunk = sbert_model.encode(chunk_text, convert_to_tensor=True)
-        score = util.cos_sim(emb_passage, emb_chunk).item()
+    # ================================
+    # 3. similaridade vetorizada
+    # ================================
+    scores = util.cos_sim(emb_passage, chunk_embeddings)[0]
 
-        if score > best_score:
-            best_score = score
-            best_idx = idx
+    best_idx = int(scores.argmax())
 
     return best_idx
