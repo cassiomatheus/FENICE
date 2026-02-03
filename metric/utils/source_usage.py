@@ -11,6 +11,8 @@ tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 #sbert_model = SentenceTransformer("all-MiniLM-L6-v2")
 sbert_model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 
+chunk_embedding_cache = {}
+
 
 def segment_document(document: str):
     return [
@@ -272,6 +274,84 @@ def compute_source_usage_chunks(alignments, document):
         "used_chunk_indices": used_chunk_indices #Não estou usando
     }
 
+# def map_claim_to_chunk_sbert(alignment, chunks, document):
+
+#     if alignment is None:
+#         return None
+
+#     passage = alignment.get("source_passage", "").strip()
+#     if passage == "":
+#         return None
+
+#     # ================================
+#     # 1. textos dos chunks (uma vez)
+#     # ================================
+#     chunk_texts = [
+#         document[ch["start"]:ch["end"]].strip()
+#         for ch in chunks
+#         if document[ch["start"]:ch["end"]].strip()
+#     ]
+
+#     if len(chunk_texts) == 0:
+#         return None
+
+#     # ================================
+#     # 2. embeddings em batch (uma vez)
+#     # ================================
+#     with torch.no_grad():
+#         chunk_embeddings = sbert_model.encode(
+#             chunk_texts,
+#             batch_size=32,
+#             convert_to_tensor=True,
+#             show_progress_bar=False
+#         )
+
+#         emb_passage = sbert_model.encode(
+#             passage,
+#             convert_to_tensor=True
+#         )
+
+#     # ================================
+#     # 3. similaridade vetorizada
+#     # ================================
+#     scores = util.cos_sim(emb_passage, chunk_embeddings)[0]
+
+#     best_idx = int(scores.argmax())
+
+#     return best_idx
+
+
+
+
+
+
+def get_chunk_embeddings(document, chunks):
+    doc_id = hash(document)
+
+    if doc_id in chunk_embedding_cache:
+        return chunk_embedding_cache[doc_id]
+
+    chunk_texts = [
+        document[ch["start"]:ch["end"]].strip()
+        for ch in chunks
+        if document[ch["start"]:ch["end"]].strip()
+    ]
+
+    if not chunk_texts:
+        return None
+
+    with torch.inference_mode():
+        embeddings = sbert_model.encode(
+            chunk_texts,
+            batch_size=32,
+            convert_to_tensor=True,
+            show_progress_bar=False
+        )
+
+    chunk_embedding_cache[doc_id] = embeddings
+    return embeddings
+
+
 def map_claim_to_chunk_sbert(alignment, chunks, document):
 
     if alignment is None:
@@ -281,39 +361,17 @@ def map_claim_to_chunk_sbert(alignment, chunks, document):
     if passage == "":
         return None
 
-    # ================================
-    # 1. textos dos chunks (uma vez)
-    # ================================
-    chunk_texts = [
-        document[ch["start"]:ch["end"]].strip()
-        for ch in chunks
-        if document[ch["start"]:ch["end"]].strip()
-    ]
-
-    if len(chunk_texts) == 0:
+    chunk_embeddings = get_chunk_embeddings(document, chunks)
+    if chunk_embeddings is None:
         return None
 
-    # ================================
-    # 2. embeddings em batch (uma vez)
-    # ================================
-    with torch.no_grad():
-        chunk_embeddings = sbert_model.encode(
-            chunk_texts,
-            batch_size=32,
-            convert_to_tensor=True,
-            show_progress_bar=False
-        )
-
+    with torch.inference_mode():
         emb_passage = sbert_model.encode(
             passage,
             convert_to_tensor=True
         )
 
-    # ================================
-    # 3. similaridade vetorizada
-    # ================================
     scores = util.cos_sim(emb_passage, chunk_embeddings)[0]
+    return int(scores.argmax())
 
-    best_idx = int(scores.argmax())
 
-    return best_idx

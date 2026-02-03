@@ -41,6 +41,8 @@ class FENICE:
         )
         self.nli_max_length = nli_max_length
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.spacy_cache = {}
+
 
 
     def _score(self, sample_id: int, document: str, summary: str):
@@ -558,6 +560,13 @@ class FENICE:
           return "not_supported"
     
 
+    #Função nova inserida
+    def get_spacy_doc(self, text):
+      if text not in self.spacy_cache:
+        self.spacy_cache[text] = nlp(text)
+      return self.spacy_cache[text]
+
+
     def classify_error_type(self, summary_claim: str, source_text: str):
       """
       Classifica tipos de erro factual para claims CONTRADITAS.
@@ -579,8 +588,10 @@ class FENICE:
           "other": 0.0,
       }
  
-      doc_sum = nlp(summary_claim)
-      doc_src = nlp(source_text)
+      # doc_sum = nlp(summary_claim)
+      # doc_src = nlp(source_text)
+      doc_sum = self.get_spacy_doc(summary_claim)
+      doc_src = self.get_spacy_doc(source_text)
 
       # =====================================================
       # ERRO DE ENTIDADE (corrigido: não literal)
