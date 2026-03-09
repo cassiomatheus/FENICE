@@ -8,6 +8,7 @@ from metric.nli.nli_aligner import NLIAligner
 from metric.utils.utils import split_into_paragraphs, split_into_sentences_batched
 from metric.utils.utils import nlp  # Importa o modelo spaCy carregado
 import spacy
+from transformers import AutoTokenizer
 
 class FENICE:
     def __init__(
@@ -22,6 +23,8 @@ class FENICE:
         coreference_batch_size: int = 1,
         nli_batch_size: int = 128,
         nli_max_length: int = 256,
+        doc_chunk_max_tokens: int = 400,
+        doc_chunk_overlap: int = 0,
     ) -> None:
         self.num_sent_per_paragraph = num_sent_per_paragraph
         self.claim_extractor_batch_size = claim_extractor_batch_size
@@ -42,7 +45,11 @@ class FENICE:
         self.nli_max_length = nli_max_length
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.spacy_cache = {}
-
+        self.nli_tokenizer = AutoTokenizer.from_pretrained(
+        "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli")
+        self.doc_chunk_max_tokens = doc_chunk_max_tokens
+        self.doc_chunk_overlap = doc_chunk_overlap
+        self.doc_chunks_cache = {}
 
 
     def _score(self, sample_id: int, document: str, summary: str):
@@ -51,7 +58,12 @@ class FENICE:
       sentences_offsets = self.sentences_cache[doc_id]
       sentences = [s[0] for s in sentences_offsets]
       offsets = [(s[1], s[2]) for s in sentences_offsets]
-  
+
+      if self.doc_level_nli:
+          doc_chunks = self.doc_chunks_cache[doc_id]
+      else:
+          doc_chunks = None
+        
       paragraphs = split_into_paragraphs(
           sentences,
           self.num_sent_per_paragraph,
@@ -124,13 +136,13 @@ class FENICE:
           doc_level_alignment = None
           if self.doc_level_nli:
               doc_level_alignment = self.get_alignment(
-                  premises=[document],
+                  premises=doc_chunks,
                   hypothesis=claim,
                   sample_id=sample_id,
                   hypothesis_id=claim_id,
                   alignment_prefix="doc",
               )
-              doc_level_alignment["source_passage"] = "DOCUMENT"
+              doc_level_alignment["source_passage"] = "DOCUMENT_CHUNK"
   
           # --- Coleta de todos os alinhamentos ---
           sample_alignments = [
@@ -351,12 +363,23 @@ class FENICE:
         self.cache_alignments(documents, summaries)
 
     def cache_sentences(self, documents):
-        all_sentences = split_into_sentences_batched(
-            documents, batch_size=512, return_offsets=True
-        )
-        for i, sentences in enumerate(all_sentences):
-            id = self.get_id(i, documents[i])
-            self.sentences_cache[id] = sentences
+      all_sentences = split_into_sentences_batched(
+          documents, batch_size=512, return_offsets=True
+      )
+      for i, sentences in enumerate(all_sentences):
+          doc_id = self.get_id(i, documents[i])
+          # sentences é lista de tuplas (texto, start, end)
+          sent_texts = [s[0] for s in sentences]
+          self.sentences_cache[doc_id] = sentences
+
+          if self.doc_level_nli:
+              # Cria chunks baseados nas sentenças
+              chunks = self._create_coherent_chunks(
+                  sent_texts,
+                  max_tokens=self.doc_chunk_max_tokens,
+                  overlap_sentences=self.doc_chunk_overlap
+              )
+              self.doc_chunks_cache[doc_id] = chunks
 
     def get_docs_to_process(self, documents, cache):
         ids = [doc_id for doc_id in range(len(documents))]
@@ -426,14 +449,16 @@ class FENICE:
                     prefix="par",
                 )
             if self.doc_level_nli:
+                doc_chunks = self.doc_chunks_cache[document_id]  # em vez de chunk_document
                 alignment_ids_doc, all_pairs_doc = self.compute_nli_pairs(
                     alignment_ids_doc,
                     all_pairs_doc,
                     claims,
                     sample_id,
-                    [documents[sample_id]],
+                    doc_chunks,
                     prefix="doc",
                 )
+
         self.cache_alignment(alignments_ids, all_pairs)
         self.nli_aligner.batch_size = 1
         #self.nli_aligner.max_length = 4096 #Modificado aqui 4096 -> 2048
@@ -658,3 +683,58 @@ class FENICE:
       active_errors = sorted(active_errors, key=lambda k: scores[k], reverse=True)
 
       return active_errors
+    
+    def _create_coherent_chunks(self, sentences: List[str], max_tokens: int, overlap_sentences: int = 0) -> List[str]:
+      """
+      Agrupa sentenças em chunks que respeitam o limite de tokens, sem quebrar sentenças.
+      sentences: lista de strings (sentenças)
+      max_tokens: número máximo de tokens por chunk
+      overlap_sentences: quantidade de sentenças a sobrepor entre chunks consecutivos
+      Retorna lista de strings (chunks)
+      """
+      if not sentences:
+          return []
+
+      tokenizer = self.nli_tokenizer
+      chunks = []
+      current_chunk = []
+      current_tokens = 0
+      i = 0
+
+      while i < len(sentences):
+          sent = sentences[i]
+          tokens_count = len(tokenizer.encode(sent, add_special_tokens=False))
+
+          # Se a sentença sozinha excede o limite, coloca-a como chunk único
+          if tokens_count > max_tokens:
+              if current_chunk:
+                  chunks.append(" ".join(current_chunk))
+                  current_chunk = []
+                  current_tokens = 0
+              chunks.append(sent)
+              i += 1
+              continue
+
+          # Verifica se a sentença cabe no chunk atual
+          if current_tokens + tokens_count > max_tokens:
+              # Finaliza o chunk atual
+              chunks.append(" ".join(current_chunk))
+              # Prepara o próximo chunk com sobreposição (se especificada)
+              if overlap_sentences > 0 and len(current_chunk) > overlap_sentences:
+                  # Mantém as últimas 'overlap_sentences' sentenças
+                  overlap_start = len(current_chunk) - overlap_sentences
+                  current_chunk = current_chunk[overlap_start:]
+                  current_tokens = sum(len(tokenizer.encode(s, add_special_tokens=False)) for s in current_chunk)
+              else:
+                  current_chunk = []
+                  current_tokens = 0
+
+          current_chunk.append(sent)
+          current_tokens += tokens_count
+          i += 1
+
+      if current_chunk:
+          chunks.append(" ".join(current_chunk))
+
+      return chunks
+  
