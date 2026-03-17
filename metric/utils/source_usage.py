@@ -4,6 +4,15 @@ from transformers import AutoTokenizer
 import matplotlib.pyplot as plt
 import torch
 
+import numpy as np
+import random
+from sentence_transformers import SentenceTransformer, util
+
+# ===============================
+# MODELO SEMÂNTICO (leve)
+# ===============================
+#sbert = SentenceTransformer("all-MiniLM-L6-v2")
+
 # Tokenizer para chunking com offsets
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
@@ -374,4 +383,165 @@ def map_claim_to_chunk_sbert(alignment, chunks, document):
     scores = util.cos_sim(emb_passage, chunk_embeddings)[0]
     return int(scores.argmax())
 
+# ===============================
+# 1. EVIDENCE SCORE
+# ===============================
+def compute_evidence_score(alignments):
+    """
+    Mede o quão forte é a evidência para cada claim
+    baseado em similaridade semântica (sem NLI).
+    """
+    scores = []
 
+    for al in alignments:
+        claim = al.get("summary_claim", "")
+        source = al.get("source_passage", "")
+
+        if not claim or not source:
+            continue
+
+        emb_claim = sbert_model.encode(claim, convert_to_tensor=True)
+        emb_source = sbert_model.encode(source, convert_to_tensor=True)
+
+        sim = util.cos_sim(emb_claim, emb_source).item()
+        scores.append(sim)
+
+    return float(np.mean(scores)) if scores else 0.0
+
+
+# ===============================
+# 2. FAITHFULNESS SCORE
+# ===============================
+def compute_faithfulness_score(alignments, threshold=0.5):
+    """
+    % de claims que possuem evidência suficiente.
+    """
+    supported = 0
+    total = 0
+
+    for al in alignments:
+        claim = al.get("summary_claim", "")
+        source = al.get("source_passage", "")
+
+        if not claim or not source:
+            continue
+
+        emb_claim = sbert_model.encode(claim, convert_to_tensor=True)
+        emb_source = sbert_model.encode(source, convert_to_tensor=True)
+
+        sim = util.cos_sim(emb_claim, emb_source).item()
+
+        if sim >= threshold:
+            supported += 1
+
+        total += 1
+
+    return supported / total if total > 0 else 0.0
+
+
+# ===============================
+# 3. STABILITY SCORE
+# ===============================
+def perturb_text(text):
+    """
+    Pequena perturbação:
+    - remove frases
+    - troca ordem
+    """
+    sentences = text.split(".")
+    sentences = [s.strip() for s in sentences if s.strip()]
+
+    if len(sentences) < 2:
+        return text
+
+    # remove uma sentença aleatória
+    if random.random() < 0.5:
+        sentences.pop(random.randint(0, len(sentences)-1))
+
+    # embaralha levemente
+    if random.random() < 0.5:
+        random.shuffle(sentences)
+
+    return ". ".join(sentences)
+
+
+def compute_stability_score(fenice, document, summary, n_runs=3):
+    """
+    Mede consistência do sistema sob perturbações.
+    """
+
+    # base
+    fenice.cache([document], [summary])
+    base = fenice._score(0, document, summary)
+    base_score = base["score"]
+
+    variations = []
+
+    for _ in range(n_runs):
+        perturbed_doc = perturb_text(document)
+
+        # 🔥 cache + score com MESMO ID
+        fenice.cache([perturbed_doc], [summary])
+        out = fenice._score(0, perturbed_doc, summary)
+
+        variations.append(out["score"])
+
+    if not variations:
+        return 1.0
+
+    std_dev = np.std([base_score] + variations)
+
+    stability = 1 / (1 + std_dev)
+
+    return float(stability)
+
+
+# ===============================
+# 4. RELIABILITY FINAL
+# ===============================
+def compute_reliability(
+    evidence_score,
+    faithfulness_score,
+    stability_score,
+    weights=(0.4, 0.3, 0.3)
+):
+    """
+    Combinação final dos scores
+    """
+    w1, w2, w3 = weights
+
+    return (
+        w1 * evidence_score +
+        w2 * faithfulness_score +
+        w3 * stability_score
+    )
+
+
+# ===============================
+# 5. PIPELINE COMPLETO
+# ===============================
+def evaluate_sample(fenice, document, summary):
+    """
+    Executa avaliação completa para um sample
+    """
+
+    result = fenice._score(0, document, summary)
+
+    alignments = result["alignments"]
+
+    evidence = compute_evidence_score(alignments)
+    faithfulness = compute_faithfulness_score(alignments)
+    stability = compute_stability_score(fenice, document, summary)
+
+    reliability = compute_reliability(
+        evidence,
+        faithfulness,
+        stability
+    )
+
+    return {
+        "evidence_score": evidence,
+        "faithfulness_score": faithfulness,
+        "stability_score": stability,
+        "reliability_score": reliability
+    }
