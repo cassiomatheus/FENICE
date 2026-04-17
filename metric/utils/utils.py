@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 import torch
 import numpy as np
 import random
+import re
+
 
 
 # ===============================
@@ -390,59 +392,233 @@ def compute_faithfulness_score(alignments, threshold=0.5):
 
     return supported / total if total > 0 else 0.0
 
+# ==============================
+# UTIL: split de sentenças
+# ==============================
+def split_sentences(text):
+    sentences = re.split(r'(?<=[.!?]) +', text)
+    return [s.strip() for s in sentences if s.strip()]
 
-# ===============================
-# 3. STABILITY SCORE
-# ===============================
-def perturb_text(text):
-    """
-    Pequena perturbação:
-    - remove frases
-    - troca ordem
-    """
-    sentences = text.split(".")
-    sentences = [s.strip() for s in sentences if s.strip()]
+
+# ==============================
+# 1. REORDER (leve)
+# ==============================
+def reorder_sentences(text, intensity=0.3):
+    sentences = split_sentences(text)
 
     if len(sentences) < 2:
         return text
 
-    # remove uma sentença aleatória
-    if random.random() < 0.5:
-        sentences.pop(random.randint(0, len(sentences)-1))
+    n_swaps = max(1, int(len(sentences) * intensity))
 
-    # embaralha levemente
-    if random.random() < 0.5:
-        random.shuffle(sentences)
+    for _ in range(n_swaps):
+        i = random.randint(0, len(sentences) - 2)
+        sentences[i], sentences[i+1] = sentences[i+1], sentences[i]
 
-    return ". ".join(sentences)
+    return " ".join(sentences)
 
 
-def compute_stability_score(fenice, document, summary, n_runs=3):
+# ==============================
+# 2. REMOVE (leve)
+# ==============================
+def remove_sentences(text, intensity=0.2):
+    sentences = split_sentences(text)
+
+    if len(sentences) <= 2:
+        return text
+
+    #n_remove = max(1, int(len(sentences) * intensity))
+    #Evitar remoção agressiva demais, garante que sobra pelo menos 1 sentença
+    n_remove = min(len(sentences) - 1, max(1, int(len(sentences) * intensity)))
+
+    indices = set(random.sample(range(len(sentences)), n_remove))
+    new_sentences = [s for i, s in enumerate(sentences) if i not in indices]
+
+    return " ".join(new_sentences)
+
+
+# ==============================
+# 3. PARAPHRASE (leve e seguro)
+# ==============================
+def simple_paraphrase(text, intensity=0.3):
+    sentences = split_sentences(text)
+
+    if not sentences:
+        return text
+
+    replacements = {
+        "however": "but",
+        "therefore": "thus",
+        "in addition": "also",
+        "moreover": "furthermore",
+        "because": "since",
+        "although": "even though"
+    }
+
+    new_sentences = []
+
+    for s in sentences:
+        s_new = s
+
+        # aplicar substituições com probabilidade
+        for k, v in replacements.items():
+            if k in s.lower() and random.random() < intensity:
+                s_new = re.sub(k, v, s_new, flags=re.IGNORECASE)
+
+        # pequena reordenação interna (segura)
+        if random.random() < intensity and len(s.split()) > 6:
+            words = s.split()
+            i = random.randint(0, len(words) - 2)
+            words[i], words[i+1] = words[i+1], words[i]
+            s_new = " ".join(words)
+
+        new_sentences.append(s_new)
+
+    return " ".join(new_sentences)
+
+
+# ==============================
+# 4. FUNÇÃO PRINCIPAL (com pesos)
+# ==============================
+def perturb_text(
+    text,
+    weights=None,
+    intensity=0.2,
+    seed=None
+):
     """
-    Mede consistência do sistema sob perturbações.
+    weights: dict com pesos das operações
+        exemplo: {"reorder": 0.4, "remove": 0.3, "paraphrase": 0.3}
+    intensity: quão forte a perturbação
     """
 
-    # base
-    fenice.cache([document], [summary])
-    base = fenice._score(0, document, summary)
-    base_score = base["score"]
+    if seed is not None:
+        random.seed(seed)
+
+    if weights is None:
+        weights = {
+            "reorder": 0.4,
+            "remove": 0.3,
+            "paraphrase": 0.3
+        }
+
+    ops = list(weights.keys())
+    probs = list(weights.values())
+
+    choice = random.choices(ops, probs)[0]
+
+    if choice == "reorder":
+        return reorder_sentences(text, intensity)
+
+    elif choice == "remove":
+        return remove_sentences(text, intensity)
+
+    elif choice == "paraphrase":
+        return simple_paraphrase(text, intensity)
+
+    return text
+
+
+# ===============================
+# 3. STABILITY SCORE
+# ===============================
+# def perturb_text(text):
+#     """
+#     Pequena perturbação:
+#     - remove frases
+#     - troca ordem
+#     """
+#     sentences = text.split(".")
+#     sentences = [s.strip() for s in sentences if s.strip()]
+
+#     if len(sentences) < 2:
+#         return text
+
+#     # remove uma sentença aleatória
+#     if random.random() < 0.5:
+#         sentences.pop(random.randint(0, len(sentences)-1))
+
+#     # embaralha levemente
+#     if random.random() < 0.5:
+#         random.shuffle(sentences)
+
+#     return ". ".join(sentences)
+
+
+# def compute_stability_score(fenice, document, summary, n_runs=5, seed=None):
+#     """
+#     Mede consistência do sistema sob perturbações.
+#     """
+#     if seed is not None:
+#         random.seed(seed)
+#         np.random.seed(seed)
+
+#     # base
+#     fenice.cache([document], [summary])
+#     base = fenice._score(0, document, summary)
+#     base_score = base["score"]
+
+#     variations = []
+
+#     for _ in range(n_runs):
+#         perturbed_doc = perturb_text(document)
+
+#         # garante perturbação real
+#         if perturbed_doc.strip() == document.strip():
+#             perturbed_doc = reorder_sentences(document, intensity=0.3)
+
+#         fenice.cache([perturbed_doc], [summary])
+#         out = fenice._score(0, perturbed_doc, summary)
+
+#         variations.append(out["score"])
+
+#     # se não conseguiu gerar variações válidas
+#     if not variations:
+#         return 1.0
+
+#     # calcula variância corretamente
+#     all_scores = [base_score] + variations
+#     std_dev = np.std(all_scores, ddof=1) if len(all_scores) > 1 else 0.0
+
+#     # transforma em estabilidade
+#     stability = 1 / (1 + std_dev)
+
+#     return float(stability)
+
+# ===============================
+# 3. STABILITY SCORE (CORRIGIDO PARA GERENCIAR MEMÓRIA)
+# ===============================
+def compute_stability_score(fenice, document, summary, base_score, n_runs=5, seed=None):
+    """
+    Mede consistência do sistema sob perturbações de forma segura.
+    """
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
 
     variations = []
 
     for _ in range(n_runs):
         perturbed_doc = perturb_text(document)
 
-        # 🔥 cache + score com MESMO ID
-        fenice.cache([perturbed_doc], [summary])
-        out = fenice._score(0, perturbed_doc, summary)
+        # garante perturbação real
+        if perturbed_doc.strip() == document.strip():
+            perturbed_doc = reorder_sentences(document, intensity=0.3)
 
-        variations.append(out["score"])
+        # USAR SCORE_BATCH EM VEZ DE CACHE E _SCORE MANUAIS
+        # Isso garante que a RAM e a VRAM serão limpas adequadamente a cada iteração
+        out_list = fenice.score_batch([{"document": perturbed_doc, "summary": summary}])
+        variations.append(out_list[0]["score"])
 
+    # se não conseguiu gerar variações válidas
     if not variations:
         return 1.0
 
-    std_dev = np.std([base_score] + variations)
+    # calcula variância corretamente
+    all_scores = [base_score] + variations
+    std_dev = np.std(all_scores, ddof=1) if len(all_scores) > 1 else 0.0
 
+    # transforma em estabilidade
     stability = 1 / (1 + std_dev)
 
     return float(stability)
@@ -455,7 +631,7 @@ def compute_reliability(
     evidence_score,
     faithfulness_score,
     stability_score,
-    weights=(0.4, 0.3, 0.3)
+    weights=(0.5, 0.4, 0.1)
 ):
     """
     Combinação final dos scores
@@ -472,18 +648,45 @@ def compute_reliability(
 # ===============================
 # 5. PIPELINE COMPLETO
 # ===============================
-def evaluate_sample(fenice, document, summary):
+# def evaluate_sample(fenice, document, summary):
+#     """
+#     Executa avaliação completa para um sample
+#     """
+
+#     result = fenice._score(0, document, summary)
+
+#     alignments = result["alignments"]
+
+#     evidence = compute_evidence_score(alignments)
+#     faithfulness = compute_faithfulness_score(alignments)
+#     stability = compute_stability_score(fenice, document, summary)
+
+#     reliability = compute_reliability(
+#         evidence,
+#         faithfulness,
+#         stability
+#     )
+
+#     return {
+#         "evidence_score": evidence,
+#         "faithfulness_score": faithfulness,
+#         "stability_score": stability,
+#         "reliability_score": reliability
+#     }
+
+# ===============================
+# 5. PIPELINE COMPLETO (CORRIGIDO PARA EVITAR KEYERROR)
+# ===============================
+def evaluate_sample(fenice, document, summary, precomputed_alignments, base_score):
     """
-    Executa avaliação completa para um sample
+    Executa avaliação completa para um sample sem refazer cálculos já processados
     """
-
-    result = fenice._score(0, document, summary)
-
-    alignments = result["alignments"]
-
-    evidence = compute_evidence_score(alignments)
-    faithfulness = compute_faithfulness_score(alignments)
-    stability = compute_stability_score(fenice, document, summary)
+    
+    evidence = compute_evidence_score(precomputed_alignments)
+    faithfulness = compute_faithfulness_score(precomputed_alignments)
+    
+    # Passamos o fenice e o base_score para rodar as perturbações isoladamente
+    stability = compute_stability_score(fenice, document, summary, base_score)
 
     reliability = compute_reliability(
         evidence,

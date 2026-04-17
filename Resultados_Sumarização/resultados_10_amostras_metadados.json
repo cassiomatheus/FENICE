@@ -1,0 +1,24 @@
+{
+  "modelo": "allenai/led-base-16384",
+  "num_parametros": 161844480,
+  "device": "cuda",
+  "dataset": "ccdv/govreport-summarization",
+  "num_samples": 10,
+  "seed": 42,
+  "geracao": {
+    "num_beams": 4,
+    "length_penalty": 2.0,
+    "no_repeat_ngram_size": 3,
+    "early_stopping": true,
+    "min_ratio": 0.08,
+    "max_ratio": 0.12,
+    "max_absolute_tokens": 1024
+  },
+  "data": "2026-04-03T01:34:12.881149",
+  "bibliotecas": {
+    "torch": "2.11.0+cu126",
+    "transformers": "5.5.0",
+    "datasets": "4.8.4",
+    "numpy": "2.2.6"
+  }
+}

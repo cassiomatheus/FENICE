@@ -5,3 +5,6 @@ transformers~=4.38.2
 sentencepiece==0.2.0
 scikit-learn==1.5.0
 sentence-transformers==2.6.1
+bert_score
+rouge_score
+openpyxl
