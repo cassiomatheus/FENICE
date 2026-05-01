@@ -661,7 +661,7 @@ class FENICE:
         else:
             return None
 
-    def classify_factual_status(self, probs, ent_th=0.6, contr_th=0.5):
+    def classify_factual_status(self, probs, ent_th=0.7, contr_th=0.6):
       """
       Classifica o status factual de uma claim com base nas probabilidades NLI.
       Retorna: supported | contradicted | not_supported

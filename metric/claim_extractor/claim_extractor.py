@@ -9,13 +9,16 @@ class ClaimExtractor:
     def __init__(
         self,
         model_name: str = "Babelscape/t5-base-summarization-claim-extractor",
-        local_files_only=True,
+        #local_files_only=True,
         device: str = "cuda:0",
         batch_size: int = 32,
     ):
         self.device = device
         # load model from HF
-        self.model = T5ForConditionalGeneration.from_pretrained(model_name, local_files_only=True).to(device)
+        self.model = T5ForConditionalGeneration.from_pretrained(
+            model_name, 
+            #local_files_only=True
+        ).to(device)
         self.tokenizer = T5Tokenizer.from_pretrained(model_name)
         self.batch_size = batch_size
 

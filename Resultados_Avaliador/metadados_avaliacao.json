@@ -1,7 +1,7 @@
 {
   "argumentos": {
     "input": "Resultados_Sumarização/LED_150_amostras.jsonl",
-    "output": "Resultados_Avaliador/Exp2_LED_150_amostras.xlsx",
+    "output": "Resultados_Avaliador/Exp3_LED_150_amostras.xlsx",
     "checkpoint": "checkpoint_avaliacao.csv",
     "batch_size": 1,
     "seed": 42,
@@ -12,12 +12,12 @@
   "fenice_params": {
     "use_coref": true,
     "paragraph_level_nli": true,
-    "doc_level_nli": false
+    "doc_level_nli": true
   },
   "fenice_commit": "reducao",
-  "data_execucao": "2026-04-17T13:55:49.722404",
+  "data_execucao": "2026-04-21T15:24:39.164291",
   "versoes_bibliotecas": {
-    "torch": "2.11.0",
+    "torch": "2.11.0+cu126",
     "transformers": "4.38.2",
     "pandas": "2.3.3",
     "numpy": "1.26.4",

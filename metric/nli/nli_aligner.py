@@ -9,7 +9,7 @@ class NLIAligner:
         self,
         model_name: str = "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli",
         batch_size: int = 16,
-        local_files_only=True,
+        #local_files_only=True,
         device: str = "cuda:0",
         max_length: int = 256,
         **kwargs,
@@ -24,7 +24,7 @@ class NLIAligner:
         #Modificado aqui tbm
         self.model = AutoModelForSequenceClassification.from_pretrained(
                 model_name,
-                local_files_only=True,
+                #local_files_only=True,
                 torch_dtype=torch.float16
             ).to(device)
 
