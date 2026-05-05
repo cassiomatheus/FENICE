@@ -2,9 +2,9 @@ import pandas as pd
 
 # Dicionário com os modelos e seus arquivos
 model_files = {
-    'bart-large': '/content/Exp3_bart-large_150_amostras.xlsx',
-    'PRIMERA': '/content/Exp3_PRIMERA_150_amostras.xlsx',
-    'LED': '/content/Exp3_LED_150_amostras.xlsx'
+    'bart-large': 'caminho para o arquivo',
+    'PRIMERA': 'caminho para o arquivo',
+    'LED': 'caminho para o arquivo',
 }
 
 dfs = []

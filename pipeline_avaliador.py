@@ -63,8 +63,8 @@ torch.set_num_threads(10) # Limita a metade das threads do Ryzen 5500
 # ==============================
 # CONFIGURAÇÕES PADRÃO
 # ==============================
-DEFAULT_FENICE_REPO = "https://github.com/cassiomatheus/FENICE.git"
-DEFAULT_FENICE_COMMIT = "reducao"
+DEFAULT_FENICE_REPO = ""    #Link do clone do repositorio .git
+DEFAULT_FENICE_COMMIT = ""  #Nome da Branch utilizada
 DEFAULT_BATCH_SIZE = 1
 DEFAULT_SEED = 42
 
@@ -216,7 +216,7 @@ def main():
                         help="Arquivo JSON com os resumos (colunas: 'texto_original', 'resumo_gerado')")
     parser.add_argument("--output", default="Resultados_Avaliador/resultados_avaliacao.xlsx",
                         help="Arquivo Excel de saída")
-    parser.add_argument("--checkpoint", default="checkpoint_avaliacao.csv",
+    parser.add_argument("--checkpoint", default="Checkpoints\checkpoint_avaliacao.csv",
                         help="Arquivo CSV para checkpoint")
     parser.add_argument("--batch_size", type=int, default=DEFAULT_BATCH_SIZE,
                         help="Tamanho do lote (recomendado 1)")
@@ -293,7 +293,7 @@ def main():
     fenice_params = {
         "use_coref": True,
         "paragraph_level_nli": True,
-        "doc_level_nli": True
+        "doc_level_nli": False
     }
     fenice = FENICE(**fenice_params)
 
@@ -368,7 +368,6 @@ def main():
 
             # BERTScore
             try:
-                #P, R, F1 = bert_score([summ], [doc], lang="en", verbose=False, device=device)
                 
                 if device == "cuda":
                     # Habilita o contexto de meia precisão (FP16) para a GPU
@@ -400,7 +399,6 @@ def main():
                 logging.error(f"Erro no BERTScore para amostra {abs_idx}: {e}")
                 bert_f = bert_p = bert_r = None
 
-            # Métricas agregadas (se disponíveis)
             # Métricas agregadas (se disponíveis)
             if HAS_EVALUATE_SAMPLE:
                 try:
@@ -483,9 +481,7 @@ def main():
         gc.collect()
         if device == "cuda":
             torch.cuda.empty_cache()
-            #torch.cuda.empty_cache()
             torch.cuda.synchronize()
-        
         
         # ==========================================
         # NOVA LÓGICA DE PAUSA (5 MINUTOS)

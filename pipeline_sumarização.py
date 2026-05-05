@@ -29,14 +29,6 @@ def set_seed(seed=42):
 device = "cuda" if torch.cuda.is_available() else "cpu"
 dtype = torch.float16 if device == "cuda" else torch.float32  # adaptação para CPU
 
-# Configuração de logging (arquivo + console)
-#logging.basicConfig(
-#   format='%(asctime)s - %(levelname)s - %(message)s',
-#    datefmt="%Y-%m-%d %H:%M:%S",
-#    level=logging.INFO,
-#    handlers=[logging.FileHandler("sumarizacao.log"), logging.StreamHandler()]
-#)
-
 def setup_logging(log_file: str = "sumarizacao.log"):
     """Configura logging para arquivo e console."""
     logging.basicConfig(

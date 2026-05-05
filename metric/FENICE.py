@@ -164,14 +164,6 @@ class FENICE:
           best_alignment = self.max_alignment(sample_alignments)
           alignment = best_alignment.copy()
           alignment["all_alignments"] = sample_alignments
-          
-          # ======== CLASSIFICAÇÃO FACTUAL CORRETA (RIGOROSA AO ARTIGO) ========
-          # Classifica a afirmação EXCLUSIVAMENTE com base nas probs da s_i* (best_alignment)
-        #   final_status = self.classify_factual_status(best_alignment.get("probs"))
-
-        #   alignment["factual_status"] = final_status
-        #   status_counts[final_status] += 1
-
   
         # ======== CLASSIFICAÇÃO FACTUAL: AGREGAÇÃO MULTI-GRANULAR ========
           statuses = []
@@ -237,103 +229,6 @@ class FENICE:
           "error_type_ratios": error_type_ratios,
           "alignments": alignments,
       }
-  
-  
-  
-
-
-
-
-
-
-
-    # def _score_mod(self, sample_id: int, document: str, summary: str):
-    #     doc_id = self.get_id(sample_id, document)
-    #     sentences_offsets = self.sentences_cache[doc_id]
-    #     sentences = [s[0] for s in sentences_offsets]
-    #     offsets = [(s[1], s[2]) for s in sentences_offsets]
-    #     # paragraphs are sliding windows of {num_sent_per_paragraph} sentences
-    #     paragraphs = split_into_paragraphs(
-    #         sentences,
-    #         self.num_sent_per_paragraph,
-    #         sliding_paragraphs=self.sliding_paragraphs,
-    #         sliding_stride=self.sliding_stride,
-    #     )
-    #     # claim extraction
-    #     summary_id = self.get_id(sample_id, summary)
-    #     summary_claims = self.claims_cache.get(summary_id, [summary])
-    #     alignments = []
-    #     for claim_id, claim in enumerate(summary_claims):
-    #         # sentence-level alignment
-    #         sentence_level_alignment = self.get_alignment(
-    #             premises=sentences,
-    #             hypothesis=claim,
-    #             sample_id=sample_id,
-    #             hypothesis_id=claim_id,
-    #         )
-    #         coref_alignment = None
-    #         if self.use_coref:
-    #             coref_clusters = self.coref_clusters_cache[doc_id]
-    #             # modified versions of {aligned_sentence} obtained through coreference resolution
-    #             coref_premises = self.coref_model.get_coref_versions(
-    #                 sentence=sentence_level_alignment["source_passage"],
-    #                 text=document,
-    #                 sentences=sentences,
-    #                 offsets=offsets,
-    #                 clusters=coref_clusters,
-    #             )
-    #             if coref_premises:
-    #                 coref_alignment = self.get_alignment(
-    #                     sample_id=sample_id,
-    #                     hypothesis_id=claim_id,
-    #                     hypothesis=claim,
-    #                     premises=coref_premises,
-    #                     alignment_prefix="coref",
-    #                 )
-    #         paragraph_level_alignment = None
-    #         if len(paragraphs) > 1 and self.paragraph_level_nli:
-    #             paragraph_level_alignment = self.get_alignment(
-    #                 premises=paragraphs,
-    #                 hypothesis=claim,
-    #                 sample_id=sample_id,
-    #                 hypothesis_id=claim_id,
-    #                 alignment_prefix="par",
-    #             )
-    #         doc_level_alignment = None
-    #         if self.doc_level_nli and len(paragraphs) > 1:
-    #             doc_level_alignment = self.get_alignment(
-    #                 hypothesis=claim,
-    #                 premises=[document],
-    #                 sample_id=sample_id,
-    #                 hypothesis_id=claim_id,
-    #                 alignment_prefix="doc",
-    #             )
-    #             doc_level_alignment["source_passage"] = "DOCUMENT"
-    #         sample_alignments = [
-    #             sentence_level_alignment,
-    #             coref_alignment,
-    #             paragraph_level_alignment,
-    #             doc_level_alignment,
-    #         ]
-    #         alignment = self.max_alignment(sample_alignments)
-    #         alignments.append(alignment)
-    #     score = np.mean([al["score"] for al in alignments])
-    #     return {"score": score, "alignments": alignments}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     def max_alignment(self, sample_alignments):
         sample_alignments = [s for s in sample_alignments if s is not None]
@@ -382,9 +277,6 @@ class FENICE:
             desc="Computing FENICE...",
         ):
             predictions.append(self._score(sample_id, doc, summary))
-
-        # del self.nli_aligner
-        # torch.cuda.empty_cache()
         
         # --- INÍCIO DA LIMPEZA COMPLETA DE MEMÓRIA ---
         del self.nli_aligner
@@ -455,8 +347,6 @@ class FENICE:
         gc.collect()  # Força a RAM do sistema a se livrar do modelo T5
         torch.cuda.empty_cache() # Força a GPU a limpar a VRAM
         # --- FIM DA LIMPEZA ---
-        # del claim_extractor
-        # torch.cuda.empty_cache()
 
     # cache coreference resolution outputs
     def cache_coref(self, documents):
@@ -472,8 +362,6 @@ class FENICE:
         gc.collect()  # Força a RAM do sistema a se livrar do modelo fastcoref
         torch.cuda.empty_cache()
         # --- FIM DA LIMPEZA ---
-        # del coref_model.model
-        # torch.cuda.empty_cache()
 
     def cache_alignments(self, documents: List[str], summaries: List[str]):
         alignments_ids, all_pairs = [], []
@@ -519,7 +407,6 @@ class FENICE:
 
         self.cache_alignment(alignments_ids, all_pairs)
         self.nli_aligner.batch_size = 1
-        #self.nli_aligner.max_length = 4096 #Modificado aqui 4096 -> 2048
         self.nli_aligner.max_length = 4096
         self.cache_alignment(alignment_ids_doc, all_pairs_doc)
         self.nli_aligner.batch_size = self.nli_batch_size
@@ -569,61 +456,6 @@ class FENICE:
                 contr.detach().cpu(),
                 neut.detach().cpu(),
             )
-
-
-    # def load_alignment_mod(
-    #     self, alignments_ids: List[str], premises: List[str], hypothesis: str
-    # ):
-    #     if all([k in self.alignments_cache for k in alignments_ids]):
-    #         scores = [self.alignments_cache[key] for key in alignments_ids]
-    #         alignment = None
-    #         max_score = -np.inf
-    #         for i, (ent, contr, neut) in enumerate(scores):
-    #             ent, contr, neut = ent.item(), contr.item(), neut.item()
-    #             align_score = ent - contr #Modificado aqui
-    #             if align_score > max_score:
-    #                 max_score = align_score
-    #                 alignment = (premises[i], [ent, contr, neut])
-    #         return (
-    #             {
-    #                 "score": max_score,
-    #                 "summary_claim": hypothesis,
-    #                 "source_passage": alignment[0],
-    #             },
-    #             scores,
-    #         )
-    #     else:
-    #         return None
-
-    # def load_alignment(
-    #     self, alignments_ids: List[str], premises: List[str], hypothesis: str
-    # ):
-    #     if all([k in self.alignments_cache for k in alignments_ids]):
-    #         scores = [self.alignments_cache[key] for key in alignments_ids]
-    #         alignment = None
-    #         max_score = -np.inf
-    #         best_probs = None # Nova variável para guardar as probs
-
-    #         for i, (ent, contr, neut) in enumerate(scores):
-    #             ent, contr, neut = ent.item(), contr.item(), neut.item()
-    #             align_score = ent - contr #Modificado aqui
-    #             if align_score > max_score:
-    #                 max_score = align_score
-    #                 # Guardamos as probabilidades brutas do vencedor
-    #                 best_probs = [ent, contr, neut] 
-    #                 alignment = (premises[i], [ent, contr, neut])
-            
-    #         return (
-    #             {
-    #                 "score": max_score,
-    #                 "probs": best_probs, # Adicionamos ao dicionário de retorno
-    #                 "summary_claim": hypothesis,
-    #                 "source_passage": alignment[0],
-    #             },
-    #             scores,
-    #         )
-    #     else:
-    #         return None
     
     def load_alignment(
         self, alignments_ids: List[str], premises: List[str], hypothesis: str
@@ -713,7 +545,7 @@ class FENICE:
       doc_src = self.get_spacy_doc(source_text)
 
       # =====================================================
-      # ERRO DE ENTIDADE (corrigido: não literal)
+      # ERRO DE ENTIDADE
       # =====================================================
       src_tokens = {t.lemma_.lower() for t in doc_src if t.is_alpha}
 
@@ -746,7 +578,7 @@ class FENICE:
           scores["predicate"] += 0.4
 
       # =====================================================
-      # ERRO DE CORREFERÊNCIA (corrigido: condicionado)
+      # ERRO DE CORREFERÊNCIA
       # =====================================================
       pronouns = [t for t in doc_sum if t.pos_ == "PRON"]
 
@@ -766,7 +598,7 @@ class FENICE:
               scores["coreference"] += 0.7
 
       # =====================================================
-      # DECISÃO FINAL (PROBLEMA 4 resolvido aqui)
+      # DECISÃO FINAL
       # =====================================================
       active_errors = [k for k, v in scores.items() if v >= TH]
 

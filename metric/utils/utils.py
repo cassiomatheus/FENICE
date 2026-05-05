@@ -14,18 +14,10 @@ import numpy as np
 import random
 import re
 
-
-
-# ===============================
-# MODELO SEMÂNTICO (leve)
-# ===============================
-#sbert = SentenceTransformer("all-MiniLM-L6-v2")
-
 # Tokenizer para chunking com offsets e mesmo usado no FENICE
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
 # Modelo SBERT
-#sbert_model = SentenceTransformer("all-MiniLM-L6-v2")
 sbert_model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 
 chunk_embedding_cache = {}
@@ -243,7 +235,7 @@ def compute_claim_region_proportions(positions):
 
 
 # --------------------------------------------------
-# Função principal (usada no seu script)
+# Função principal
 # --------------------------------------------------
 def compute_source_usage_chunks(alignments, document):
     """
@@ -274,17 +266,13 @@ def compute_source_usage_chunks(alignments, document):
     mean_position = float(np.mean(positions)) if positions else 0.0
 
     region_counts, region_ratios = compute_claim_region_proportions(positions)
-    # textual_region_coverage = compute_textual_coverage_by_region(
-    #     chunks,
-    #     used_chunk_indices
-    # )
 
     return {
-        "coverage_ratio": coverage_ratio, #Não estou usando
+        "coverage_ratio": coverage_ratio,       #Não estou usando
         "mean_position": mean_position,   
         "region_counts": region_counts,
         "region_ratios": region_ratios,
-        "positions": positions,           #Não estou usando
+        "positions": positions,                  #Não estou usando
         "used_chunk_indices": used_chunk_indices #Não estou usando
     }
 
@@ -401,7 +389,7 @@ def split_sentences(text):
 
 
 # ==============================
-# 1. REORDER (leve)
+# 1. REORDER
 # ==============================
 def reorder_sentences(text, intensity=0.3):
     sentences = split_sentences(text)
@@ -419,7 +407,7 @@ def reorder_sentences(text, intensity=0.3):
 
 
 # ==============================
-# 2. REMOVE (leve)
+# 2. REMOVE
 # ==============================
 def remove_sentences(text, intensity=0.2):
     sentences = split_sentences(text)
@@ -427,7 +415,6 @@ def remove_sentences(text, intensity=0.2):
     if len(sentences) <= 2:
         return text
 
-    #n_remove = max(1, int(len(sentences) * intensity))
     #Evitar remoção agressiva demais, garante que sobra pelo menos 1 sentença
     n_remove = min(len(sentences) - 1, max(1, int(len(sentences) * intensity)))
 
@@ -438,7 +425,7 @@ def remove_sentences(text, intensity=0.2):
 
 
 # ==============================
-# 3. PARAPHRASE (leve e seguro)
+# 3. PARAPHRASE 
 # ==============================
 def simple_paraphrase(text, intensity=0.3):
     sentences = split_sentences(text)
@@ -465,7 +452,7 @@ def simple_paraphrase(text, intensity=0.3):
             if k in s.lower() and random.random() < intensity:
                 s_new = re.sub(k, v, s_new, flags=re.IGNORECASE)
 
-        # pequena reordenação interna (segura)
+        # pequena reordenação interna
         if random.random() < intensity and len(s.split()) > 6:
             words = s.split()
             i = random.randint(0, len(words) - 2)
@@ -478,7 +465,7 @@ def simple_paraphrase(text, intensity=0.3):
 
 
 # ==============================
-# 4. FUNÇÃO PRINCIPAL (com pesos)
+# 4. FUNÇÃO PRINCIPAL
 # ==============================
 def perturb_text(
     text,
@@ -518,75 +505,8 @@ def perturb_text(
 
     return text
 
-
 # ===============================
 # 3. STABILITY SCORE
-# ===============================
-# def perturb_text(text):
-#     """
-#     Pequena perturbação:
-#     - remove frases
-#     - troca ordem
-#     """
-#     sentences = text.split(".")
-#     sentences = [s.strip() for s in sentences if s.strip()]
-
-#     if len(sentences) < 2:
-#         return text
-
-#     # remove uma sentença aleatória
-#     if random.random() < 0.5:
-#         sentences.pop(random.randint(0, len(sentences)-1))
-
-#     # embaralha levemente
-#     if random.random() < 0.5:
-#         random.shuffle(sentences)
-
-#     return ". ".join(sentences)
-
-
-# def compute_stability_score(fenice, document, summary, n_runs=5, seed=None):
-#     """
-#     Mede consistência do sistema sob perturbações.
-#     """
-#     if seed is not None:
-#         random.seed(seed)
-#         np.random.seed(seed)
-
-#     # base
-#     fenice.cache([document], [summary])
-#     base = fenice._score(0, document, summary)
-#     base_score = base["score"]
-
-#     variations = []
-
-#     for _ in range(n_runs):
-#         perturbed_doc = perturb_text(document)
-
-#         # garante perturbação real
-#         if perturbed_doc.strip() == document.strip():
-#             perturbed_doc = reorder_sentences(document, intensity=0.3)
-
-#         fenice.cache([perturbed_doc], [summary])
-#         out = fenice._score(0, perturbed_doc, summary)
-
-#         variations.append(out["score"])
-
-#     # se não conseguiu gerar variações válidas
-#     if not variations:
-#         return 1.0
-
-#     # calcula variância corretamente
-#     all_scores = [base_score] + variations
-#     std_dev = np.std(all_scores, ddof=1) if len(all_scores) > 1 else 0.0
-
-#     # transforma em estabilidade
-#     stability = 1 / (1 + std_dev)
-
-#     return float(stability)
-
-# ===============================
-# 3. STABILITY SCORE (CORRIGIDO PARA GERENCIAR MEMÓRIA)
 # ===============================
 def compute_stability_score(fenice, document, summary, base_score, n_runs=5, seed=None):
     """
@@ -605,8 +525,6 @@ def compute_stability_score(fenice, document, summary, base_score, n_runs=5, see
         if perturbed_doc.strip() == document.strip():
             perturbed_doc = reorder_sentences(document, intensity=0.3)
 
-        # USAR SCORE_BATCH EM VEZ DE CACHE E _SCORE MANUAIS
-        # Isso garante que a RAM e a VRAM serão limpas adequadamente a cada iteração
         out_list = fenice.score_batch([{"document": perturbed_doc, "summary": summary}])
         variations.append(out_list[0]["score"])
 
@@ -614,7 +532,7 @@ def compute_stability_score(fenice, document, summary, base_score, n_runs=5, see
     if not variations:
         return 1.0
 
-    # calcula variância corretamente
+    # calcula variância
     all_scores = [base_score] + variations
     std_dev = np.std(all_scores, ddof=1) if len(all_scores) > 1 else 0.0
 
@@ -646,36 +564,7 @@ def compute_reliability(
 
 
 # ===============================
-# 5. PIPELINE COMPLETO
-# ===============================
-# def evaluate_sample(fenice, document, summary):
-#     """
-#     Executa avaliação completa para um sample
-#     """
-
-#     result = fenice._score(0, document, summary)
-
-#     alignments = result["alignments"]
-
-#     evidence = compute_evidence_score(alignments)
-#     faithfulness = compute_faithfulness_score(alignments)
-#     stability = compute_stability_score(fenice, document, summary)
-
-#     reliability = compute_reliability(
-#         evidence,
-#         faithfulness,
-#         stability
-#     )
-
-#     return {
-#         "evidence_score": evidence,
-#         "faithfulness_score": faithfulness,
-#         "stability_score": stability,
-#         "reliability_score": reliability
-#     }
-
-# ===============================
-# 5. PIPELINE COMPLETO (CORRIGIDO PARA EVITAR KEYERROR)
+# 5. PIPELINE COMPLETO 
 # ===============================
 def evaluate_sample(fenice, document, summary, precomputed_alignments, base_score):
     """
