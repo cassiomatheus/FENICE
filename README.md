@@ -4,6 +4,16 @@ This repository contains the implementation and experimental pipeline for analyz
 
 This repository is released in anonymized form for peer review.
 
+## Human Evaluation Protocol
+
+This repository includes a structured human evaluation protocol designed to assess factual consistency in generated summaries:
+
+- `Human_Evaluation_Form_for_Factual_Consistency.pdf`
+
+The document provides annotation guidelines and a standardized evaluation form covering different categories of factual errors, including entity errors, predicate errors, and coreference issues.
+
+This protocol was developed to support future human validation of the proposed error taxonomy and evaluation framework. Due to practical constraints (e.g., time, cost, and annotator availability), human evaluation was not conducted in the current study. However, the inclusion of this resource enables reproducibility and facilitates its adoption in subsequent work.
+
 ---
 
 ## Repository Structure
