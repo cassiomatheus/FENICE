@@ -1,78 +1,110 @@
-<div align="center">
-  <h1>FENICE-LongDoc: Factual Consistency Evaluation for Long-Document Summarization</h1>
-</div>
+# Factual Error Analysis in Abstractive Summarization
 
-[![Status](https://img.shields.io/badge/Status-Under%20Review-blue)]
-[![Based on FENICE](https://img.shields.io/badge/Based%20on-FENICE%20(ACL%202024)-4b44ce)]
-[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)]
+This repository contains the implementation and experimental pipeline for analyzing factual errors in abstractive summarization systems. The approach is based on Natural Language Inference (NLI) and linguistic heuristics, as described in the accompanying paper.
 
-> ⚠️ **Acknowledgment:** This repository builds upon the FENICE framework (Scirè et al., ACL 2024), extending it to long-document summarization scenarios.
+This repository is released in anonymized form for peer review.
 
 ---
 
-## 📖 Overview
+## Repository Structure
 
-Factual inconsistency remains a critical limitation in abstractive summarization, particularly for long documents where relevant information is distributed across extended contexts. Traditional metrics (e.g., ROUGE and BERTScore) rely on lexical overlap and often fail to capture factual correctness.
-
-**FENICE-LongDoc** extends the original FENICE framework by organizing the evaluation into three complementary analysis components:
-
-1. **Claim-level Classification & Error Taxonomy:**  
-   Categorizes factual inconsistencies into Entity, Predicate, and Coreference errors using heuristic linguistic analysis (`spaCy`).
-
-2. **Composite Metrics:**  
-   Introduces *Evidence*, *Faithfulness*, and *Stability*, combined into a unified **Reliability Score** (interpreted as an aggregated proxy).
-
-3. **Positional Analysis:**  
-   Quantifies how different regions (start, middle, end) of the source document contribute to generated summaries, enabling the analysis of positional bias.
+```
+.
+├── pipeline_sumarização.py     # Main pipeline for summary generation
+├── fenice_experiment.py        # FENICE-based factual evaluation
+├── metricas.py                 # Auxiliary metrics
+├── Teste_Wilcoxon.py          # Statistical significance tests
+├── requirements.txt            # Python dependencies
+└── README.md
+```
 
 ---
 
-## ✨ Key Features & Hardware Optimizations
+## Setup
 
-Evaluating long documents (e.g., GovReport dataset with up to 16k tokens) is computationally demanding. This pipeline includes practical engineering solutions:
+### 1. Create Environment
 
-- **Sliding Window Chunking:**  
-  Handles token limits by aggregating NLI scores across overlapping document chunks.
+```bash
+conda create -n factual_eval python=3.10
+conda activate factual_eval
+```
 
-- **Automated Checkpointing:**  
-  Saves intermediate progress to ensure robustness during long executions.
+### 2. Install Dependencies
 
-- **VRAM Management:**  
-  Includes scheduled pauses, `garbage collection`, and `cuda.empty_cache()` routines to mitigate out-of-memory errors on consumer GPUs (e.g., RTX 3060 12GB).
-
-- **Unified Evaluation Pipeline:**  
-  Computes FENICE-based metrics, ROUGE, BERTScore, and source usage statistics in a single execution.
-
----
-
-## 🛠️ Installation
-
-Create a Conda environment and install dependencies:
-
-```sh
-conda create -n fenice-longdoc python=3.10
-conda activate fenice-longdoc
+```bash
+pip install -r requirements.txt
+```
 
 ---
 
-## Install required packages:
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-pip install transformers sentencepiece scikit-learn pandas openpyxl spacy fastcoref rouge_score bert_score sentence-transformers matplotlib tqdm
+## Usage
+
+### 1. Generate Summaries
+
+```bash
+python pipeline_sumarização.py
+```
+
+### 2. Run Factual Evaluation
+
+```bash
+python fenice_experiment.py
+```
+
+### 3. Compute Additional Metrics
+
+```bash
+python metricas.py
+```
+
+### 4. Statistical Testing
+
+```bash
+python Teste_Wilconxon.py
+```
 
 ---
 
-## Download the required spaCy model:
-python -m spacy download en_core_web_sm
+## Methodology Overview
+
+The pipeline follows these main steps:
+
+- Claim extraction from generated summaries  
+- Alignment between claims and source document segments using NLI  
+- Classification into:
+  - Supported
+  - Contradicted
+  - Not Supported  
+- Aggregation into factual consistency metrics  
+- Error categorization using linguistic heuristics  
 
 ---
 
-## ▶️ Usage
+## External Resources
 
-The evaluation pipeline is executed via command line:
+This project builds upon prior work. For the original implementation of the FENICE framework:
 
-```sh
-python Avaliador_deep_V2_5.py \
-  --input your_summaries.json \
-  --output Resultados_Avaliador/resultados_avaliacao.xlsx \
-  --batch_size 1 \
-  --seed 42
+> Official implementation (external work):  
+> [Link omitted for double-blind review]
+
+---
+
+## Limitations
+
+- Evaluation depends on a single NLI model  
+- Experiments conducted in a zero-shot setting  
+- No human annotation was performed due to resource constraints  
+
+A human annotation protocol is included to support future validation.
+
+---
+
+## License
+
+This project is released for academic and research purposes only.
+
+---
+
+## Citation
+
+If accepted, citation details will be provided in the final version of the paper.

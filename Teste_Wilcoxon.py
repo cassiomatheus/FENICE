@@ -3,9 +3,9 @@ import numpy as np
 from scipy.stats import wilcoxon
 
 # carregar dados
-bart = pd.read_excel("/content/Exp1_bart-large_150_amostras.xlsx")
-primera = pd.read_excel("/content/Exp1_PRIMERA_150_amostras.xlsx")
-led = pd.read_excel("/content/Exp1_LED_150_amostras.xlsx")
+bart = pd.read_excel("caminho para o arquivo")
+primera = pd.read_excel("caminho para o arquivo")
+led = pd.read_excel("caminho para o arquivo")
 
 # ordenar
 bart = bart.sort_values("sample_id")
