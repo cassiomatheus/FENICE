@@ -465,7 +465,6 @@ def main():
         # Rateia o tempo e a VRAM entre as amostras do lote
         time_per_sample = batch_total_time / len(batch)
         vram_per_sample = vram_peak  # A VRAM é um pico, não pode ser rateada; atribuímos o mesmo valor a todas (o pico do lote)
-        # Mas se preferir, pode deixar vram_peak como o valor do lote para todas as amostras
 
         for result_item in batch_results:
             result_item["execution_time"] = round(time_per_sample, 5)

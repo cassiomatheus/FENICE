@@ -12,7 +12,7 @@ from datetime import datetime
 from tqdm import tqdm
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import importlib.metadata  # para capturar versões das bibliotecas
+import importlib.metadata 
 
 # ===================== CONFIGURAÇÃO INICIAL =====================
 def set_seed(seed=42):
@@ -35,7 +35,7 @@ def setup_logging(log_file: str = "sumarizacao.log"):
         level=logging.INFO,
         format="[%(levelname)s] %(asctime)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-        force=True,  # <-- ADICIONE ESTA LINHA
+        force=True,
         handlers=[
             logging.FileHandler(log_file, encoding='utf-8'),
             logging.StreamHandler(sys.stdout)
