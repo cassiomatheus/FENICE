@@ -15,14 +15,14 @@ class ClaimExtractor:
     ):
         self.device = device
         # load model from HF
-        self.model = T5ForConditionalGeneration.from_pretrained(
-            model_name, 
-            #local_files_only=True
-        ).to(device)
-        self.tokenizer = T5Tokenizer.from_pretrained(model_name)
+        #self.model = T5ForConditionalGeneration.from_pretrained(
+        #    model_name, 
+        #    #local_files_only=True
+        #).to(device)
+        #self.tokenizer = T5Tokenizer.from_pretrained(model_name)
         self.batch_size = batch_size
 
-    def process_batch(self, batch: List[str]) -> List[List[str]]:
+    def process_batch_antigo(self, batch: List[str]) -> List[List[str]]:
         predictions = []
         batches = list(chunks(batch, self.batch_size))
         for b in tqdm(batches, desc="Extracting claims..."):
@@ -38,4 +38,18 @@ class ClaimExtractor:
             claims = [split_into_sentences(c) for c in claims]
             claims = [distinct(c) for c in claims]
             predictions.extend(claims)
+        return predictions
+    
+    def process_batch(self, batch: List[str]) -> List[List[str]]:
+        predictions = []
+        for summary in tqdm(batch, desc="Extracting claims (Extractive bypass)..."):
+            sentences = split_into_sentences(summary)
+            valid_claims = []
+            for sentence in sentences:
+                clean_sentence = sentence.replace('\n', ' ').strip()
+                if len(clean_sentence.split()) >= 5:
+                    valid_claims.append(clean_sentence)
+            if not valid_claims:
+                valid_claims = [summary]
+            predictions.append(distinct(valid_claims))
         return predictions

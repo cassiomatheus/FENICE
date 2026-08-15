@@ -1,0 +1,23 @@
+{
+  "modelo": "allenai/PRIMERA",
+  "num_parametros": 447219712,
+  "device": "cuda",
+  "dataset": "ccdv/govreport-summarization",
+  "num_samples": 10,
+  "seed": 42,
+  "geracao": {
+    "num_beams": 4,
+    "length_penalty": 1.0,
+    "no_repeat_ngram_size": 3,
+    "early_stopping": true,
+    "min_tokens": 50,
+    "max_tokens": 512
+  },
+  "data": "2026-07-16T20:48:57.828202",
+  "bibliotecas": {
+    "torch": "2.11.0+cu126",
+    "transformers": "4.38.2",
+    "datasets": "4.8.4",
+    "numpy": "1.26.4"
+  }
+}

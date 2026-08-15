@@ -3,24 +3,25 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 from metric.utils.utils import chunks
 
-
 class NLIAligner:
     def __init__(
         self,
+        # Atualizado para o modelo otimizado para Contradição
+        #model_name: str = "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli",
+        
+        # Correto:
         model_name: str = "MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli",
+
         batch_size: int = 16,
-        #local_files_only=True,
         device: str = "cuda:0",
         max_length: int = 256,
         **kwargs,
     ):
         self.model_name = model_name
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-
         self.device = device
         self.model = AutoModelForSequenceClassification.from_pretrained(
                 model_name,
-                #local_files_only=True,
                 torch_dtype=torch.float16
             ).to(device)
 
@@ -66,7 +67,7 @@ class NLIAligner:
         input_ids = tokenized_input_seq_pairs["input_ids"]
         token_type_ids = tokenized_input_seq_pairs["token_type_ids"]
         attention_mask = tokenized_input_seq_pairs["attention_mask"]
-        #Modificado aqui
+        
         with torch.inference_mode():
             outputs = self.model(
                 input_ids,
