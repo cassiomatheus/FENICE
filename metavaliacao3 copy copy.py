@@ -50,8 +50,9 @@ nlp = spacy.load("en_core_web_md")
 # =====================================================================
 # CONFIGURAÇÃO E CHAVE MESTRA
 # =====================================================================
-TIPO_AVALIACAO = "predicate" 
-ARQUIVO = "Gerador_erros/govreport_erros_pred_corref_entity_realistas_v1.csv"
+TIPO_AVALIACAO = "entity" 
+#ARQUIVO = "Gerador_erros/govreport_erros_pred_corref_entity_realistas_v1.csv"
+ARQUIVO = "Gerador_erros/govreport_erros_pred_corref_entity_controlados_v5.csv"
 
 if TIPO_AVALIACAO == "entity":
     col_resumo = 'resumo_entity'

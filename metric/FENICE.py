@@ -150,20 +150,37 @@ class FENICE:
           ent_prob = melhores_probs[0]
           contr_prob = melhores_probs[1]
 
-          # Resolve o Claim 4: Aceita entailment a partir de 55% para resumos abstrativos
-          final_status = self.classify_factual_status(melhores_probs, ent_th=0.55)
-
           error_type = self.taxonomy_classifier.classify(
                   claim=alignment["summary_claim"],
                   evidence=alignment["source_passage"],
                   full_document=document
           )
+          
+          claim_doc = self.get_spacy_doc(alignment["summary_claim"])
+
+          # =====================================================================
+          # ESTRATÉGIA 2: LÓGICA FUZZY (Decaimento de Probabilidade NLI)
+          # =====================================================================
+          if error_type == "entity":
+              hyp_ents = alignment.get("hyp_ents_cache", [])
+              if hyp_ents:
+                  evid_lower = alignment["source_passage"].lower()
+                  ents_found = sum(1 for e in hyp_ents if e in evid_lower)
+                  
+                  # Taxa de entidades que sobreviveram na frase original
+                  overlap_ratio = ents_found / max(len(hyp_ents), 1)
+                  
+                  # O pulo do gato: A probabilidade do NLI é penalizada pela taxa de erro!
+                  # Ex: NLI diz 99% (0.99), mas faltou 1 de 2 entidades (0.5). ent_prob cai para 49.5%
+                  ent_prob = ent_prob * overlap_ratio
+
+          # Usamos as probabilidades calibradas para definir o status preliminar
+          melhores_probs_calibrados = [ent_prob, contr_prob, melhores_probs[2]]
+          final_status = self.classify_factual_status(melhores_probs_calibrados, ent_th=0.55)
 
           # -------------------------------------------------------------------
           # 1. FILTRO DE META-DISCURSO GENERALISTA
           # -------------------------------------------------------------------
-          claim_doc = self.get_spacy_doc(alignment["summary_claim"])
-          # Adicionado "gao" como uma entidade capaz de produzir meta-discurso
           doc_nouns = {"report", "paper", "article", "document", "study", "review", "analysis", "brief", "memo", "gao", "authors", "we"}
           meta_verbs = {"describe", "examine", "summarize", "report", "evaluate", "analyze", "discuss", "provide", "present", "conclude", "focus", "aim", "investigate", "ask"}
           
@@ -175,8 +192,6 @@ class FENICE:
                       break
 
           if is_meta_discourse:
-              # O filtro NÃO perdoa manipulação de Entidades, 
-              # NEM perdoa contradições extremas (> 90%) do NLI.
               if error_type != "entity" and contr_prob < 0.90:
                   final_status = "supported"
                   error_type = "other"
@@ -184,25 +199,50 @@ class FENICE:
                   contr_prob = 0.0
 
           # -------------------------------------------------------------------
-          # 2. TRAVA DE SEGURANÇA BIFURCADA (A Mágica da Calibração)
+          # 2. TRAVA DE SEGURANÇA BIFURCADA (Baseada em Lógica Contínua)
           # -------------------------------------------------------------------
           if error_type != "other":
-              if error_type == "entity":
-                  # Motores Neurais (DeBERTa) são CEGOS para números/siglas. 
-                  # Se a taxonomia detectar manipulação de entidade, confiamos 100% no spaCy!
+              if error_type in ("entity_severe", "predicate_severe"):
+                  # Erros Estruturais e Injeções Confirmadas: O NLI não tem jurisdição. Veto absoluto.
+                  error_type = error_type.split("_")[0] # Remove o sulfixo para padronizar o log do status
                   final_status = "contradicted"
-                  if alignment["score"] > 0: 
-                      alignment["score"] = -abs(alignment["score"])
-              else:
-                  # Para erros de Predicado (abstrações), mantemos a trava neural
-                  if ent_prob >= 0.50 or contr_prob < 0.10:
+                  if alignment.get("score", 0) > 0: 
+                      alignment["score"] = -abs(alignment.get("score", 1.0))
+                      
+              elif error_type == "entity":
+                  # Entidade ausente local (ex: sigla omitida). Perdoada pela Fuzzy Logic se NLI for >= 0.55
+                  if ent_prob >= 0.55:
                       error_type = "other"
-                      # Restaura com tolerância abstrativa
-                      final_status = self.classify_factual_status(melhores_probs, ent_th=0.55) 
+                      final_status = "supported"
+                      if alignment.get("score", 0) < 0: 
+                          alignment["score"] = abs(alignment.get("score", 1.0))
                   else:
                       final_status = "contradicted"
-                      if alignment["score"] > 0: 
-                          alignment["score"] = -abs(alignment["score"])
+                      if alignment.get("score", 0) > 0: 
+                          alignment["score"] = -abs(alignment.get("score", 1.0))
+              
+              else:
+                  # PREDICADO COMUM: Fica nas mãos do NLI calibrado
+                  if ent_prob >= 0.50 or contr_prob < 0.10:
+                      error_type = "other"
+                      final_status = self.classify_factual_status(melhores_probs_calibrados, ent_th=0.55) 
+                  else:
+                      final_status = "contradicted"
+                      if alignment.get("score", 0) > 0: 
+                          alignment["score"] = -abs(alignment.get("score", 1.0))
+          else:
+              # SALVA-VIDAS DE NEGAÇÃO EXTREMA
+              has_neg = any(t.dep_ == "neg" for t in claim_doc)
+              if has_neg and contr_prob >= 0.85:
+                  error_type = "predicate"
+                  final_status = "contradicted"
+                  if alignment.get("score", 0) > 0: 
+                      alignment["score"] = -abs(alignment.get("score", 1.0))
+              else:
+                  # ESCUDO: NLI alucinando contradição leve sem prova do spaCy
+                  if final_status == "contradicted":
+                      final_status = "not_supported"
+                      alignment["score"] = 0.0
 
           alignment["factual_status"] = final_status
           status_counts[final_status] += 1 
@@ -484,7 +524,7 @@ class FENICE:
         else:
             return None
 
-    def load_alignment(
+    def load_alignment_2(
         self, alignments_ids: List[str], premises: List[str], hypothesis: str
     ):
         if all([k in self.alignments_cache for k in alignments_ids]):
@@ -503,19 +543,39 @@ class FENICE:
             for i, (ent, contr, neut) in enumerate(scores):
                 ent, contr, neut = ent.item(), contr.item(), neut.item()
                 sim = sim_scores[i].item()
+
+                # =================================================================
+                # NOVO CÁLCULO DE SEARCH SCORE (Escudo contra Falsas Contradições)
+                # =================================================================
+                # Elevamos o limiar para 0.55. Textos institucionais têm muita 
+                # sobreposição de palavras; exigimos maior certeza de que é o mesmo assunto.
+                LIMIAR_ASSUNTO = 0.65
                 
                 # =================================================================
                 # O ESCUDO CONTRA FALSAS CONTRADIÇÕES (Maçãs vs Laranjas)
                 # =================================================================
                 # Só aceitamos o sinal de Contradição na busca se as frases forem
                 # semânticamente muito parecidas (sim > 0.45).
-                if sim >= 0.45:
-                    base_score = max(ent, contr) - neut
+                if sim >= LIMIAR_ASSUNTO:
+                    #base_score = max(ent, contr) - neut
+
+                    # Se o assunto for o mesmo, permitimos que uma Contradição ou Entailment 
+                    # puxem a frase para o topo (sem subtrair o Neutro, para não penalizar alucinações reais).
+                    base_score = max(ent, contr)
+
                 else:
-                    base_score = ent - neut # Se os assuntos divergem, ignoramos a falsa contradição
+                    #base_score = ent - neut # Se os assuntos divergem, ignoramos a falsa contradição
+
+                    # Se o assunto diverge, travamos a contradição. Só deixamos passar
+                    # se for um Entailment muito forte e surpreendente.
+                    base_score = ent
                 
                 # A similaridade atua como força gravitacional para puxar a frase certa
-                search_score = base_score + sim
+                #search_score = base_score + sim
+
+                # O SBERT ganha peso x2. A similaridade semântica (SBERT) deve ser 
+                # a "âncora" da busca, e o NLI (DeBERTa) faz o refinamento fino.
+                search_score = (sim * 2.0) + base_score
                 # =================================================================
 
                 if search_score > max_search_score:
@@ -531,6 +591,78 @@ class FENICE:
                     "summary_claim": hypothesis,
                     "source_passage": alignment[0],
                     "relevance": max_search_score 
+                },
+                scores,
+            )
+        else:
+            return None
+
+    def load_alignment(
+        self, alignments_ids: List[str], premises: List[str], hypothesis: str
+    ):
+        if all([k in self.alignments_cache for k in alignments_ids]):
+            scores = [self.alignments_cache[key] for key in alignments_ids]
+            alignment = None
+            max_search_score = -np.inf
+            best_probs = None
+            final_fenice_score = 0.0
+
+            # =================================================================
+            # ESTRATÉGIA 1: MAPEAMENTO DE ENTIDADES PARA ANCORAGEM
+            # =================================================================
+            hyp_doc = self.get_spacy_doc(hypothesis)
+            strict_labels = {"PERSON", "ORG", "GPE", "LOC", "PRODUCT", "LAW", "DATE", "TIME", "CARDINAL", "ORDINAL", "MONEY", "PERCENT", "QUANTITY"}
+            hyp_ents = [ent.text.lower() for ent in hyp_doc.ents if ent.label_ in strict_labels]
+            
+            # Adiciona Proper Nouns e numerais puros para garantir
+            for t in hyp_doc:
+                if (t.pos_ == "PROPN" or t.text.isupper() or t.pos_ == "NUM") and len(t.text) > 1:
+                    hyp_ents.append(t.text.lower())
+            hyp_ents = list(set(hyp_ents))
+            total_hyp_ents = max(len(hyp_ents), 1)
+
+            # Vetoriza o claim e as premissas
+            with torch.inference_mode():
+                hyp_emb = sbert_model.encode(hypothesis, convert_to_tensor=True)
+                prem_embs = sbert_model.encode(premises, convert_to_tensor=True)
+                sim_scores = util.cos_sim(hyp_emb, prem_embs)[0]
+
+            for i, (ent, contr, neut) in enumerate(scores):
+                ent, contr, neut = ent.item(), contr.item(), neut.item()
+                sim = sim_scores[i].item()
+
+                # =================================================================
+                # CÁLCULO DA PENALIDADE DE AUSÊNCIA (Quebrando a busca cega)
+                # =================================================================
+                premise_lower = premises[i].lower()
+                ents_found = sum(1 for e in hyp_ents if e in premise_lower)
+                
+                # Se faltam entidades, subtrai até 0.5 do score da busca
+                absence_penalty = (1.0 - (ents_found / total_hyp_ents)) * 0.5 
+
+                LIMIAR_ASSUNTO = 0.65
+                if sim >= LIMIAR_ASSUNTO:
+                    base_score = max(ent, contr)
+                else:
+                    base_score = ent
+                
+                # O SBERT ancora a busca, mas a ausência de entidades pune os falsos positivos
+                search_score = (sim * 2.0) + base_score - absence_penalty
+
+                if search_score > max_search_score:
+                    max_search_score = search_score
+                    best_probs = [ent, contr, neut]
+                    alignment = (premises[i], [ent, contr, neut])
+                    final_fenice_score = ent - contr 
+            
+            return (
+                {
+                    "score": final_fenice_score, 
+                    "probs": best_probs, 
+                    "summary_claim": hypothesis,
+                    "source_passage": alignment[0],
+                    "relevance": max_search_score,
+                    "hyp_ents_cache": hyp_ents # Passando adiante para não reprocessar na Estratégia 2
                 },
                 scores,
             )

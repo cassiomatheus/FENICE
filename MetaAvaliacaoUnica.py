@@ -39,7 +39,7 @@ from metric.FENICE import FENICE
 # =====================================================================
 # CONFIGURAÇÕES E CARREGAMENTO GERAL
 # =====================================================================
-ARQUIVO = "Gerador_erros/govreport_erros_pred_corref_entity_realistas_v1.csv"
+ARQUIVO = "Gerador_erros/govreport_erros_pred_corref_entity_controlados_v5.csv"
 TIPOS_AVALIACAO = ["original", "entity", "predicate", "coreference"]
 
 colunas_map = {
@@ -56,8 +56,8 @@ encoder = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 fenice = FENICE(
     use_coref=False,
     doc_chunk_overlap=2,
-    claim_extractor_batch_size=64,  
-    nli_batch_size=64
+    claim_extractor_batch_size=16,
+    nli_batch_size=8
 )
 
 def normalizar(txt):
@@ -105,121 +105,162 @@ df = pd.read_csv(ARQUIVO)
 # Defina aqui qual linha do CSV você quer avaliar (0 = primeira linha)
 INDICE_REGISTRO = 1 
 
-# Seleciona apenas a linha desejada preservando a estrutura de DataFrame
+# Arquivo de Saída .txt
+ARQUIVO_TXT = f"Raio_X_Registro_{INDICE_REGISTRO}.txt"
+
 registros_para_processar = df.iloc[[INDICE_REGISTRO]]
 
 print(f"\nIniciando processamento automatizado do registro índice [{INDICE_REGISTRO}]...\n")
 
-for row_idx, linha in tqdm(registros_para_processar.iterrows(), total=len(registros_para_processar), desc="Processando Documentos"):
-    fonte = linha['fonte']
-    resumo_original = linha['resumo_original']
-    sentencas_originais_texto = [s.text for s in nlp(resumo_original).sents]
-
-    # Itera sobre os 4 cenários de erro para o mesmo documento
-    for tipo_avaliacao in TIPOS_AVALIACAO:
-        col_resumo, col_tokens = colunas_map[tipo_avaliacao]
-        
-        resumo_corrompido = linha[col_resumo]
-        
-        if col_tokens and pd.notna(linha[col_tokens]):
-            tokens_injetados = ast.literal_eval(linha[col_tokens])
-        else:
-            tokens_injetados = []
-
-        gt = {"tipo_erro": tipo_avaliacao}
-
-        # Omitir barra de progresso individual para não poluir o console
-        resultado_fenice = fenice.score_batch(
-            [{'document': fonte, 'summary': resumo_corrompido}],
-            ground_truths=[gt]
-        )[0]
-
-        # Coleta das predições
-        alignments = resultado_fenice["alignments"]
-        claims_text = [c["summary_claim"] for c in alignments]
-        mapa_claim_sentenca = mapear_claims_para_sentencas_originais(claims_text, sentencas_originais_texto)
-
-        erros_detectados_indices = set()
-
-        for idx_claim, claim in enumerate(alignments):
-            status = claim["factual_status"]
-            classes_fenice = claim.get("error_types_all", [])
-            sentenca_origem_idx = mapa_claim_sentenca.get(idx_claim, -1)
-            
-            # Pareamento de Erros Injetados
-            erros_match = []
-            for idx_erro, erro in enumerate(tokens_injetados):
-                if erro.get("sentenca_index") == sentenca_origem_idx:
-                    span_injetado = get_injected_span(erro)
-                    if normalizar(span_injetado) in normalizar(claim["summary_claim"]):
-                        erros_match.append((idx_erro, erro))
-
-            tipo_detectado_defecto = classes_fenice[0] if classes_fenice else "other"
-            if tipo_detectado_defecto not in colunas_detectado: 
-                tipo_detectado_defecto = "other"
-
-            # CONTAGEM DE TP, FN e MATRIZ
-            if erros_match:
-                for idx_e, _ in erros_match:
-                    erros_detectados_indices.add(idx_e)
-                
-                if status in ["contradicted", "not_supported"]:
-                    for _, erro in erros_match:
-                        global_stats[tipo_avaliacao]["TP"] += 1
-                        tipo_real = erro.get("tipo_erro", erro.get("tipo", "other"))
-                        if tipo_real not in linhas_real: 
-                            tipo_real = "other"
-                        
-                        if tipo_real in classes_fenice:
-                            tipo_det = tipo_real
-                            global_stats[tipo_avaliacao]["DIAG_CORRETO"] += 1
-                        else:
-                            tipo_det = tipo_detectado_defecto
-                        
-                        global_matrices[tipo_avaliacao].loc[tipo_real, tipo_det] += 1
-                else:
-                    global_stats[tipo_avaliacao]["FN"] += len(erros_match)
-            
-            # CONTAGEM DE FP NAS FRASES INOCENTES
-            else:
-                if status == "contradicted":
-                    global_stats[tipo_avaliacao]["FP"] += 1
-                    global_stats[tipo_avaliacao]["FP_CONTRADICAO"] += 1
-                    global_matrices[tipo_avaliacao].loc["nenhum_fp", tipo_detectado_defecto] += 1
-                elif status == "not_supported":
-                    global_stats[tipo_avaliacao]["FP"] += 1
-                    global_stats[tipo_avaliacao]["FP_ABSTRACAO"] += 1
-                    global_matrices[tipo_avaliacao].loc["nenhum_fp", tipo_detectado_defecto] += 1
-
-        # Falsos negativos de erros que nunca foram pareados
-        for i, erro in enumerate(tokens_injetados):
-            if i not in erros_detectados_indices:
-                global_stats[tipo_avaliacao]["FN"] += 1
-
-        global_scores[tipo_avaliacao].append(resultado_fenice['score'])
-
-# =====================================================================
-# RELATÓRIO FINAL CONSOLIDADO
-# =====================================================================
-print("\n\n" + "="*80)
-print(f"🏆 RELATÓRIO DE METAVALIAÇÃO CONSOLIDADO (REGISTRO ÍNDICE {INDICE_REGISTRO})")
-print("="*80)
-
-for tipo in TIPOS_AVALIACAO:
-    stats = global_stats[tipo]
-    score_medio_bruto = np.mean(global_scores[tipo])
-    score_medio_norm = (score_medio_bruto + 1.0) / 2.0
+# Abre o arquivo de texto para escrita
+with open(ARQUIVO_TXT, "w", encoding="utf-8") as f_out:
     
-    print(f"\n============================================================")
-    print(f"📊 MATRIZ GLOBAIS: {tipo.upper()}")
-    print(f"============================================================")
-    print(global_matrices[tipo].to_string())
-    print("------------------------------------------------------------")
-    print(f" Verdadeiros Positivos (TP)    : {stats['TP']}")
-    print(f" Diagnósticos Corretos        : {stats['DIAG_CORRETO']} (Diagonal Principal)")
-    print(f" Falsos Negativos (FN)        : {stats['FN']}")
-    print(f" Falsos Positivos Totais (FP) : {stats['FP']}")
-    print(f"   ├─ Falsas Alucinações (Contradição) : {stats['FP_CONTRADICAO']}")
-    print(f"   └─ Paráfrases Distantes (Neutro)    : {stats['FP_ABSTRACAO']}")
-    print(f" Score Médio do FENICE (0 a 1) : {score_medio_norm:.4f}")
-    print("============================================================\n")
+    f_out.write(f"================================================================================\n")
+    f_out.write(f"🔍 RELATÓRIO DE METAVALIAÇÃO - REGISTRO [{INDICE_REGISTRO}]\n")
+    f_out.write(f"================================================================================\n")
+
+    for row_idx, linha in tqdm(registros_para_processar.iterrows(), total=len(registros_para_processar), desc="Processando Documentos"):
+        fonte = linha['fonte']
+        resumo_original = linha['resumo_original']
+        sentencas_originais_texto = [s.text for s in nlp(resumo_original).sents]
+
+        # Itera sobre os 4 cenários de erro para o mesmo documento
+        for tipo_avaliacao in TIPOS_AVALIACAO:
+            col_resumo, col_tokens = colunas_map[tipo_avaliacao]
+            
+            resumo_corrompido = linha[col_resumo]
+            
+            if col_tokens and pd.notna(linha[col_tokens]):
+                tokens_injetados = ast.literal_eval(linha[col_tokens])
+            else:
+                tokens_injetados = []
+
+            gt = {"tipo_erro": tipo_avaliacao}
+
+            resultado_fenice = fenice.score_batch(
+                [{'document': fonte, 'summary': resumo_corrompido}],
+                ground_truths=[gt]
+            )[0]
+
+            # Coleta das predições
+            alignments = resultado_fenice["alignments"]
+            claims_text = [c["summary_claim"] for c in alignments]
+            mapa_claim_sentenca = mapear_claims_para_sentencas_originais(claims_text, sentencas_originais_texto)
+
+            erros_detectados_indices = set()
+            
+            # --- ESCREVE O CABEÇALHO DA CATEGORIA NO TXT ---
+            if tipo_avaliacao in ["entity", "predicate", "coreference"]:
+                f_out.write(f"\n\n\n{'#'*80}\n")
+                f_out.write(f"🟢 RAIO-X DAS COMPARAÇÕES: {tipo_avaliacao.upper()}\n")
+                f_out.write(f"{'#'*80}\n")
+
+            for idx_claim, claim in enumerate(alignments):
+                status = claim["factual_status"]
+                classes_fenice = claim.get("error_types_all", [])
+                sentenca_origem_idx = mapa_claim_sentenca.get(idx_claim, -1)
+                
+                # Pareamento de Erros Injetados
+                erros_match = []
+                for idx_erro, erro in enumerate(tokens_injetados):
+                    if erro.get("sentenca_index") == sentenca_origem_idx:
+                        span_injetado = get_injected_span(erro)
+                        if normalizar(span_injetado) in normalizar(claim["summary_claim"]):
+                            erros_match.append((idx_erro, erro))
+
+                tipo_detectado_defecto = classes_fenice[0] if classes_fenice else "other"
+                if tipo_detectado_defecto not in colunas_detectado: 
+                    tipo_detectado_defecto = "other"
+
+                # CONTAGEM DE TP, FN e MATRIZ
+                if erros_match:
+                    for idx_e, _ in erros_match:
+                        erros_detectados_indices.add(idx_e)
+                    
+                    if status in ["contradicted", "not_supported"]:
+                        for _, erro in erros_match:
+                            global_stats[tipo_avaliacao]["TP"] += 1
+                            tipo_real = erro.get("tipo_erro", erro.get("tipo", "other"))
+                            if tipo_real not in linhas_real: 
+                                tipo_real = "other"
+                            
+                            if tipo_real in classes_fenice:
+                                tipo_det = tipo_real
+                                global_stats[tipo_avaliacao]["DIAG_CORRETO"] += 1
+                            else:
+                                tipo_det = tipo_detectado_defecto
+                            
+                            global_matrices[tipo_avaliacao].loc[tipo_real, tipo_det] += 1
+                    else:
+                        global_stats[tipo_avaliacao]["FN"] += len(erros_match)
+                
+                # CONTAGEM DE FP NAS FRASES INOCENTES
+                else:
+                    if status == "contradicted":
+                        global_stats[tipo_avaliacao]["FP"] += 1
+                        global_stats[tipo_avaliacao]["FP_CONTRADICAO"] += 1
+                        global_matrices[tipo_avaliacao].loc["nenhum_fp", tipo_detectado_defecto] += 1
+                    elif status == "not_supported":
+                        global_stats[tipo_avaliacao]["FP"] += 1
+                        global_stats[tipo_avaliacao]["FP_ABSTRACAO"] += 1
+                        global_matrices[tipo_avaliacao].loc["nenhum_fp", tipo_detectado_defecto] += 1
+                
+                # --- ESCREVE OS DADOS DO CLAIM NO TXT ---
+                if tipo_avaliacao in ["entity", "predicate", "coreference"]:
+                    f_out.write(f"\n[{idx_claim + 1}] CLAIM (Frase do Resumo):\n")
+                    f_out.write(f"    {claim['summary_claim']}\n")
+                    f_out.write(f"\n    SENTENÇA RECUPERADA (A Prova do Texto Original):\n")
+                    f_out.write(f"    {claim['source_passage']}\n")
+                    
+                    probs = claim.get("probs", [0, 0, 0])
+                    ent, contr, neut = probs[0] * 100, probs[1] * 100, probs[2] * 100
+                    
+                    f_out.write(f"\n    🧠 NLI (DeBERTa): Apoio: {ent:.1f}% | Contradição: {contr:.1f}% | Neutro: {neut:.1f}%\n")
+                    f_out.write(f"    📊 Status Final:  {claim['factual_status'].upper()}\n")
+                    f_out.write(f"    🔬 Regras spaCy:  {claim.get('error_types_all', [])}\n")
+                    
+                    if erros_match:
+                        for _, erro in erros_match:
+                            f_out.write(f"    ⚠️ ERRO INJETADO PELO GERADOR: {erro}\n")
+                    else:
+                        f_out.write(f"    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)\n")
+                    
+                    f_out.write("-" * 80 + "\n")
+
+            # Falsos negativos de erros que nunca foram pareados
+            for i, erro in enumerate(tokens_injetados):
+                if i not in erros_detectados_indices:
+                    global_stats[tipo_avaliacao]["FN"] += 1
+
+            global_scores[tipo_avaliacao].append(resultado_fenice['score'])
+
+    # =====================================================================
+    # ESCREVE AS MATRIZES GLOBAIS NO FINAL DO TXT E IMPRIME NO CONSOLE
+    # =====================================================================
+    relatorio_final = f"\n\n{'='*80}\n🏆 RELATÓRIO DE METAVALIAÇÃO CONSOLIDADO (REGISTRO ÍNDICE {INDICE_REGISTRO})\n{'='*80}\n"
+    f_out.write(relatorio_final)
+    print(relatorio_final)
+
+    for tipo in TIPOS_AVALIACAO:
+        stats = global_stats[tipo]
+        score_medio_bruto = np.mean(global_scores[tipo])
+        score_medio_norm = (score_medio_bruto + 1.0) / 2.0
+        
+        texto_matriz = f"\n============================================================\n"
+        texto_matriz += f"📊 MATRIZ GLOBAIS: {tipo.upper()}\n"
+        texto_matriz += f"============================================================\n"
+        texto_matriz += f"{global_matrices[tipo].to_string()}\n"
+        texto_matriz += "------------------------------------------------------------\n"
+        texto_matriz += f" Verdadeiros Positivos (TP)    : {stats['TP']}\n"
+        texto_matriz += f" Diagnósticos Corretos        : {stats['DIAG_CORRETO']} (Diagonal Principal)\n"
+        texto_matriz += f" Falsos Negativos (FN)        : {stats['FN']}\n"
+        texto_matriz += f" Falsos Positivos Totais (FP) : {stats['FP']}\n"
+        texto_matriz += f"   ├─ Falsas Alucinações (Contradição) : {stats['FP_CONTRADICAO']}\n"
+        texto_matriz += f"   └─ Paráfrases Distantes (Neutro)    : {stats['FP_ABSTRACAO']}\n"
+        texto_matriz += f" Score Médio do FENICE (0 a 1) : {score_medio_norm:.4f}\n"
+        texto_matriz += "============================================================\n"
+        
+        f_out.write(texto_matriz)
+        print(texto_matriz)
+
+print(f"\n✅ Análise concluída! Todos os resultados foram salvos no arquivo: {ARQUIVO_TXT}")

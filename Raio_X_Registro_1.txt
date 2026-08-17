@@ -1,0 +1,930 @@
+================================================================================
+🔍 RELATÓRIO DE METAVALIAÇÃO - REGISTRO [1]
+================================================================================
+
+
+
+################################################################################
+🟢 RAIO-X DAS COMPARAÇÕES: ENTITY
+################################################################################
+
+[1] CLAIM (Frase do Resumo):
+    Federal advisory committees provide advice to federal agencies on many topics.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA’s federal advisory committees play an important role in advising the agency.
+
+    🧠 NLI (DeBERTa): Apoio: 5.6% | Contradição: 0.0% | Neutro: 94.4%
+    📊 Status Final:  NOT_SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[2] CLAIM (Frase do Resumo):
+    As of March 31, 2018, EPA managed 22 such committees.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    See appendix II for a list of EPA’s 22 advisory committees as of March 31, 2018.
+
+    🧠 NLI (DeBERTa): Apoio: 99.6% | Contradição: 0.0% | Neutro: 0.4%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[3] CLAIM (Frase do Resumo):
+    They advise the agency on such issues as developing regulations and managing research programs.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    For example, OGE regulations: state that designated agency ethics officials, acting directly or through other officials, are responsible for carrying out effective financial disclosure programs by, among other things, using information in financial disclosure reports to prevent and resolve potential conflicts of interest; specify actions the official must take if the reviewing official concludes that information disclosed in the report may reveal a violation of applicable laws and regulations; and state that designated agency ethics officials are responsible for periodically evaluating their agencies’ ethics programs.
+
+    🧠 NLI (DeBERTa): Apoio: 0.2% | Contradição: 12.2% | Neutro: 87.6%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[4] CLAIM (Frase do Resumo):
+    Questions have been raised about EPA's process for appointing committee members after recent policy changes affecting who serves on the advisory committees.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA stated that this is within the discretion of the EPA Administrator and that the vetting of candidates for SAB and CASAC occurred in a different manner than in previous years with a process more robust than membership grids.
+
+    🧠 NLI (DeBERTa): Apoio: 96.7% | Contradição: 0.1% | Neutro: 3.2%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[5] CLAIM (Frase do Resumo):
+    GSA was asked to review issues related to how EPA appoints advisory committee members.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    These reviews are typically completed by February or March of the following year. GSA’s database is accessible by the general public. It includes data on committee members and committee activities from more than 50 agencies going back to 1997. The information on EPA committees includes: whether a committee member is designated as an SGE or representative; the occupation or affiliation of a committee member; state or other geographic information associated with a committee member’s occupation or affiliation; the appointment’s start and end date for each committee member; and the dates that committees held meetings. Based on our review of EPA’s Federal Advisory Committee Handbook, the agency’s established process for appointing advisory committee members includes three main phases.
+
+    🧠 NLI (DeBERTa): Apoio: 94.3% | Contradição: 0.1% | Neutro: 5.7%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 4, 'tipo_erro': 'entity', 'label_ner': 'ORG', 'token_original': 'GAO', 'token_injetado': 'GSA', 'entidade_fonte': 'GSA', 'similaridade': 0.3773446739587921, 'sentenca_fonte_index': 34, 'distancia_sentencial': 30, 'estrategia': 'same_ner_label_semantic_confusion'}
+--------------------------------------------------------------------------------
+
+[6] CLAIM (Frase do Resumo):
+    This report examines: (2) EPA's process for appointing advisory committee members, (2) the extent to which EPA followed its process for selecting members from October 2016 through March 2018, and (3) how, if at all, selected characteristics of EPA advisory committees changed after January 2017.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    To describe the U.S. Environmental Protection Agency’s (EPA) established process for appointing members to serve on EPA advisory committees, we identified and reviewed the federal laws, regulations, and policies that are relevant to EPA’s process for appointing advisory committee members.
+
+    🧠 NLI (DeBERTa): Apoio: 1.3% | Contradição: 36.4% | Neutro: 62.3%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 5, 'tipo_erro': 'entity', 'label_ner': 'CARDINAL', 'token_original': '1', 'token_injetado': '2', 'entidade_fonte': '2', 'similaridade': 0.8789713186976827, 'sentenca_fonte_index': 54, 'distancia_sentencial': 49, 'estrategia': 'same_ner_label_semantic_confusion'}
+--------------------------------------------------------------------------------
+
+[7] CLAIM (Frase do Resumo):
+    GAO reviewed relevant federal laws, regulations, and guidance; reviewed documents from committees that appointed members over this period; analyzed information from the GSA's FACA database; and interviewed agency officials.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    To describe the U.S. Environmental Protection Agency’s (EPA) established process for appointing members to serve on EPA advisory committees, we identified and reviewed the federal laws, regulations, and policies that are relevant to EPA’s process for appointing advisory committee members. To ensure that we correctly identified all relevant laws, regulations, and guidance, we consulted with: (1) the Committee Management Secretariat at the U.S. General Services Administration (GSA), which issues regulations and guidance for Federal Advisory Committee Act (FACA) committees government-wide; (2) the U.S. Office of Government Ethics, which develops ethics-related regulations for executive branch employees; and (3) EPA. Examples of EPA guidance that we reviewed include EPA’s Federal Advisory Committee Handbook, Strengthening and Improving Membership on EPA Federal Advisory Committees, and EPA Ethics Advisory 2008-02. To evaluate the extent to which EPA followed its established process for appointing members from fiscal year 2017 through the first two quarters of fiscal year 2018, we reviewed pertinent documentation from the 17 committees that appointed or reappointed advisory committee members during this time frame. The remaining committees did not appoint any committee members during the time frame we reviewed. For the above- mentioned 17 committees, we reviewed all advisory committee appointment packets—each of which can contain appointment documents for numerous appointees or reappointees—produced during this time. We also reviewed the first section (Section 1: Identifying Information and Record of Agency Review) of the Confidential Financial Disclosure Form for EPA Special Government Employees (EPA Form 3110-48) for 74 individuals who were required to submit them to EPA to determine if they met federal financial-disclosure-reporting requirements. We reviewed all 74 of the forms provided by the 8 committees that appointed or reappointed special government employees (SGE) to serve on a committee from fiscal year 2017 through the first two quarters of fiscal year 2018. Additionally, we interviewed EPA officials involved with appointing committee members to understand the steps these officials took.
+
+    🧠 NLI (DeBERTa): Apoio: 99.7% | Contradição: 0.0% | Neutro: 0.2%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[8] CLAIM (Frase do Resumo):
+    Based on GAO's review of U.S. Environmental Protection Agency's (EPA) guidance, the agency's established process for appointing advisory committee members involves three main phases: soliciting nominations, evaluating candidates, and obtaining approvals.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    Based on our review of EPA’s Federal Advisory Committee Handbook, the agency’s established process for appointing advisory committee members includes three main phases.
+
+    🧠 NLI (DeBERTa): Apoio: 0.1% | Contradição: 0.0% | Neutro: 99.9%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[9] CLAIM (Frase do Resumo):
+    Each phase involves several steps.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    As shown in figure 1, each of the three main phases in EPA’s process involves several smaller steps.
+
+    🧠 NLI (DeBERTa): Apoio: 99.2% | Contradição: 0.1% | Neutro: 0.7%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[10] CLAIM (Frase do Resumo):
+    For example, a key step for evaluating candidates involves EPA staff's preparing documents that reflect staff recommendations on the best qualified and most appropriate candidates for achieving balanced committee membership, according to EPA guidance.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    There may be benefits to following different procedures; however, under EPA’s established process, agency staff are to document in draft membership grids and include in appointment packets their rationales for recommending the candidates they deem best qualified and most appropriate for achieving balanced committees.
+
+    🧠 NLI (DeBERTa): Apoio: 99.7% | Contradição: 0.0% | Neutro: 0.3%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['entity']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[11] CLAIM (Frase do Resumo):
+    OGE generally followed its established process for most of its 22 advisory committees; however, in fiscal year 2018, EPA did not follow a key step for appointing 20 committee members to two committees GAO reviewed: the EPA Science Advisory Board and Clean Air Scientific Advisory Committee, which advise the agency on environmental regulatory matters, among other things.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    Additionally, 21 of the 22 appointment packets we reviewed contained documentation showing that EPA’s Office of General Counsel reviewed the proposed membership prior to appointment, as recommended by EPA’s Federal Advisory Committee Handbook. Figure 2 shows EPA’s established process and the steps we reviewed. For additional information about the extent to which EPA followed its process for appointing committee members, see appendix III. However, EPA did not follow a key step in its established process for appointing 20 members in fiscal year 2018 to the SAB and CASAC, which advise the agency on environmental regulatory matters, among other things. Specifically, the fiscal year 2018 appointment packets for the SAB and CASAC did not include draft membership grid documents reflecting EPA staff rationales for recommending the candidates EPA’s staff deem best qualified and most appropriate for achieving balanced committee membership.
+
+    🧠 NLI (DeBERTa): Apoio: 99.8% | Contradição: 0.1% | Neutro: 0.2%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 10, 'tipo_erro': 'entity', 'label_ner': 'ORG', 'token_original': 'EPA', 'token_injetado': 'OGE', 'entidade_fonte': 'OGE', 'similaridade': 0.4593235094398147, 'sentenca_fonte_index': 29, 'distancia_sentencial': 19, 'estrategia': 'same_ner_label_semantic_confusion'}
+--------------------------------------------------------------------------------
+
+[12] CLAIM (Frase do Resumo):
+    The 2017 appointment packets for these two committees did not contain documents reflecting EPA staff rationales for proposed membership, as called for by EPA's established process.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    Specifically, the fiscal year 2018 appointment packets for the SAB and CASAC did not include draft membership grid documents reflecting EPA staff rationales for recommending the candidates EPA’s staff deem best qualified and most appropriate for achieving balanced committee membership.
+
+    🧠 NLI (DeBERTa): Apoio: 0.7% | Contradição: 71.1% | Neutro: 28.2%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 11, 'tipo_erro': 'entity', 'label_ner': 'DATE', 'token_original': '2018', 'token_injetado': '2017', 'entidade_fonte': '2017', 'similaridade': 0.995473895059191, 'sentenca_fonte_index': 321, 'distancia_sentencial': 310, 'estrategia': 'same_ner_label_semantic_confusion'}
+--------------------------------------------------------------------------------
+
+[13] CLAIM (Frase do Resumo):
+    EPA developed guidance to implement the Federal Advisory Committee Act (FACA).
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    For example, EPA’s Federal Advisory Committee Management Division—which has overall responsibility for committee management and ensuring that EPA’s advisory committees comply with FACA—developed the Federal Advisory Committee Handbook to clarify roles and responsibilities for complying with relevant requirements.
+
+    🧠 NLI (DeBERTa): Apoio: 98.8% | Contradição: 0.1% | Neutro: 1.1%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['entity']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[14] CLAIM (Frase do Resumo):
+    By directing officials responsible for appointing committee members to follow a key step in its process to document staff rationales for proposed membership, the agency would have better assurance that it will (1) consistently meet FACA's purpose of encouraging uniform appointment procedures and (2) show how it made appointment decisions to achieve the best qualified and most appropriate candidates for balanced committee membership.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    However, under EPA’s established process, agency staff are to document in draft membership grids and include in appointment packets their rationales for recommending the candidates they deem best qualified and most appropriate for achieving balanced committees. EPA developed guidance to implement FACA, one purpose of which is to encourage the establishment of uniform committee appointment and administration procedures. In written comments on the draft report, EPA noted that agency staff documented evaluations of advisory committee candidates in briefing documents. However, EPA did not provide these documents along with its comments. Moreover, neither these evaluations nor summaries of public comments were included in the packets that EPA’s Federal Advisory Committee Handbook indicates are to contain committee appointment information, impeding EPA’s ability to ensure that it consistently meets—across all of its advisory committees—FACA’s purpose of encouraging uniform committee appointment procedures.
+
+    🧠 NLI (DeBERTa): Apoio: 99.6% | Contradição: 0.0% | Neutro: 0.4%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[15] CLAIM (Frase do Resumo):
+    EPA also did not consistently ensure that members appointed as special government employees (SGE)—who are expected to provide their best judgment free from conflicts of interest and are required by federal regulations to disclose their financial interests—met federal ethics requirements.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    We also found that EPA’s Ethics Office had not periodically evaluated, through audits or spot-checks, the quality of financial disclosure reviews conducted by its deputy ethics officials for SGEs appointed to advisory committees, as part of the periodic review of its ethics program called for by OGE regulations.
+
+    🧠 NLI (DeBERTa): Apoio: 97.6% | Contradição: 0.1% | Neutro: 2.3%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[16] CLAIM (Frase do Resumo):
+    For about 23 percent, or 22 of the 74 financial disclosure forms GAO reviewed, an ethics official had not signed and dated that the SGE filing the form was in compliance with federal ethics rules.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    However, for about 23 percent, or 17 of the 74 financial disclosure forms we reviewed, an ethics official had not signed and dated that the filer was in compliance with federal ethics rules.
+
+    🧠 NLI (DeBERTa): Apoio: 0.2% | Contradição: 97.5% | Neutro: 2.3%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['entity']
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 15, 'tipo_erro': 'entity', 'label_ner': 'CARDINAL', 'token_original': '17', 'token_injetado': '22', 'entidade_fonte': '22', 'similaridade': 0.9756411256345976, 'sentenca_fonte_index': 100, 'distancia_sentencial': 85, 'estrategia': 'same_ner_label_semantic_confusion'}
+--------------------------------------------------------------------------------
+
+[17] CLAIM (Frase do Resumo):
+    EPA also did not periodically review its ethics program, as called for by federal regulations, such as through audits or spot-checks, to evaluate the quality of financial disclosure reviews for SGEs.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA also did not consistently ensure that committee members appointed as SGEs met federal ethics requirements, and as part of its periodic review of its ethics program, EPA did not evaluate through audits or spot- checks the quality of financial disclosure reviews conducted by deputy ethics officials for these committee members.
+
+    🧠 NLI (DeBERTa): Apoio: 91.4% | Contradição: 0.1% | Neutro: 8.5%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[18] CLAIM (Frase do Resumo):
+    Until EPA's Ethics Office evaluates the quality of financial disclosure reviews of SGEs as part of its periodic review of its ethics program, it will not have reasonable assurance that it will address noncompliance with federal ethics requirements and prevent conflicts of interest on its advisory committees.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    Until EPA’s Ethics Office, as part of its periodic review of its ethics program, evaluates—for example, through audits or spot-checks—the quality of financial disclosure reviews conducted for SGEs appointed to EPA advisory committees, it will not have reasonable assurance that it is addressing noncompliance with federal ethics requirements and preventing conflicts of interest among SGEs appointed to EPA advisory committees.
+
+    🧠 NLI (DeBERTa): Apoio: 99.8% | Contradição: 0.0% | Neutro: 0.1%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[19] CLAIM (Frase do Resumo):
+    Based on GAO's review of the U.S. General Services Administration's (GSA) FACA database, there were notable changes to selected characteristics of EPA advisory committees (i.e. at least a 20 percentage point difference in the change to a characteristic after January 2017 compared to the period after January 2009).
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    To describe how, if at all, selected characteristics of EPA’s advisory committees changed after January 2017, we analyzed information from the FACA database, a publically-available database maintained by GSA.
+
+    🧠 NLI (DeBERTa): Apoio: 0.1% | Contradição: 0.1% | Neutro: 99.8%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['entity']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[20] CLAIM (Frase do Resumo):
+    Of the four characteristics GAO reviewed—committee composition, regional affiliation, membership turnover, and number of meetings committees held—one or more of the first three changed notably for four of 18 EPA advisory committees after January 2017.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA generally followed its established process for 15 of the 17 advisory committees that appointed or reappointed committee members during the time period we reviewed.
+
+    🧠 NLI (DeBERTa): Apoio: 0.1% | Contradição: 93.3% | Neutro: 6.6%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[21] CLAIM (Frase do Resumo):
+    GAO is recommending that EPA direct (1) officials responsible for appointing committee members to follow a key step in its appointment process to document staff rationales for proposed membership and (2) EPA's Ethics Office to evaluate the quality of financial disclosure reviews of SGEs appointed to advisory committees.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    By directing officials responsible for appointing committee members to prepare draft membership grids and include them in appointment packets for all committees, the agency would have better assurance that it could show how it made appointment decisions to achieve the best qualified and most appropriate candidates for balanced committee membership. EPA also did not consistently ensure that committee members appointed as SGEs met federal ethics requirements, and as part of its periodic review of its ethics program, EPA did not evaluate through audits or spot- checks the quality of financial disclosure reviews conducted by deputy ethics officials for these committee members. Until EPA’s Ethics Office periodically evaluates—for example, through audits or spot-checks—the quality of financial disclosure reviews conducted for SGEs appointed to EPA advisory committees, it will not have reasonable assurance that it will address noncompliance with federal ethics requirements and prevent conflicts of interest among SGEs appointed to EPA advisory committees. We are making the following two recommendations to EPA: The EPA Administrator should direct EPA officials responsible for appointing advisory committee members to follow a key step in its appointment process—developing and including draft membership grids in appointment packets with staff rationales for proposed membership— for all committees. (Recommendation 1) EPA’s Designated Agency Ethics Official should direct EPA’s Ethics Office, as part of its periodic review of EPA’s ethics program, to evaluate—for example, through audits or spot-checks—the quality of financial disclosure reviews for special government employees appointed to EPA advisory committees. (Recommendation 2) We provided a draft of this report to EPA for review and comment. In its written comments, reproduced in appendix IV, EPA disagreed with a key finding related to the first recommendation, with how we conducted some of our data analyses, and with some of the data points we presented. EPA agreed with the findings and conclusions related to the second recommendation. EPA also provided other comments, which we incorporated as appropriate.
+
+    🧠 NLI (DeBERTa): Apoio: 99.5% | Contradição: 0.1% | Neutro: 0.5%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[22] CLAIM (Frase do Resumo):
+    EPA disagreed with the first and agreed with the second recommendation.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA agreed with the findings and conclusions related to the second recommendation.
+
+    🧠 NLI (DeBERTa): Apoio: 0.1% | Contradição: 0.3% | Neutro: 99.6%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[23] CLAIM (Frase do Resumo):
+    GAO continues to believe that both are valid, as discussed in the report.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    In addition, the report will be available at no charge on the GAO website at http://www.gao.gov.
+
+    🧠 NLI (DeBERTa): Apoio: 0.0% | Contradição: 0.0% | Neutro: 100.0%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+
+
+################################################################################
+🟢 RAIO-X DAS COMPARAÇÕES: PREDICATE
+################################################################################
+
+[1] CLAIM (Frase do Resumo):
+    Federal advisory committees provide advice to federal agencies on many topics.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA’s federal advisory committees play an important role in advising the agency.
+
+    🧠 NLI (DeBERTa): Apoio: 5.6% | Contradição: 0.0% | Neutro: 94.4%
+    📊 Status Final:  NOT_SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[2] CLAIM (Frase do Resumo):
+    As of March 31, 2018, EPA managed 22 such committees.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    See appendix II for a list of EPA’s 22 advisory committees as of March 31, 2018.
+
+    🧠 NLI (DeBERTa): Apoio: 99.6% | Contradição: 0.0% | Neutro: 0.4%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[3] CLAIM (Frase do Resumo):
+    They do not advise the agency on such issues as developing regulations and managing research programs.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    Federal ethics regulations generally do not apply to representative members on FACA committees.
+
+    🧠 NLI (DeBERTa): Apoio: 0.2% | Contradição: 1.6% | Neutro: 98.1%
+    📊 Status Final:  NOT_SUPPORTED
+    🔬 Regras spaCy:  []
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 2, 'token_original': 'advise', 'lemma_original': 'advise', 'tipo_erro': 'predicate', 'estrategia': 'negation', 'token_injetado': 'do not advise', 'lemma_injetado': 'NOT_advise'}
+--------------------------------------------------------------------------------
+
+[4] CLAIM (Frase do Resumo):
+    Questions have been raised about EPA's process for appointing committee members after recent policy changes affecting who serves on the advisory committees.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA stated that this is within the discretion of the EPA Administrator and that the vetting of candidates for SAB and CASAC occurred in a different manner than in previous years with a process more robust than membership grids.
+
+    🧠 NLI (DeBERTa): Apoio: 96.7% | Contradição: 0.1% | Neutro: 3.2%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[5] CLAIM (Frase do Resumo):
+    GAO was asked to review issues related to how EPA appoints advisory committee members.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    We are making the following two recommendations to EPA: The EPA Administrator should direct EPA officials responsible for appointing advisory committee members to follow a key step in its appointment process—developing and including draft membership grids in appointment packets with staff rationales for proposed membership— for all committees.
+
+    🧠 NLI (DeBERTa): Apoio: 94.8% | Contradição: 0.0% | Neutro: 5.2%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[6] CLAIM (Frase do Resumo):
+    This report does not examine: (1) EPA's process for appointing advisory committee members, (2) the extent to which EPA followed its process for selecting members from October 2016 through March 2018, and (3) how, if at all, selected characteristics of EPA advisory committees changed after January 2017.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    To evaluate the extent to which EPA followed its established process for appointing members from fiscal year 2017 through the first two quarters of fiscal year 2018, we reviewed pertinent documentation from the 17 committees that appointed or reappointed advisory committee members during this time frame.
+
+    🧠 NLI (DeBERTa): Apoio: 0.3% | Contradição: 97.4% | Neutro: 2.3%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 5, 'token_original': 'examines', 'lemma_original': 'examine', 'tipo_erro': 'predicate', 'estrategia': 'negation', 'token_injetado': 'does not examine', 'lemma_injetado': 'NOT_examine'}
+--------------------------------------------------------------------------------
+
+[7] CLAIM (Frase do Resumo):
+    GAO did not review relevant federal laws, regulations, and guidance; reviewed documents from committees that appointed members over this period; analyzed information from the GSA's FACA database; and interviewed agency officials.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    By directing officials responsible for appointing committee members to prepare draft membership grids and include them in appointment packets for all committees, the agency would have better assurance that it could show how it made appointment decisions to achieve the best qualified and most appropriate candidates for balanced committee membership. EPA also did not consistently ensure that committee members appointed as SGEs met federal ethics requirements, and as part of its periodic review of its ethics program, EPA did not evaluate through audits or spot- checks the quality of financial disclosure reviews conducted by deputy ethics officials for these committee members. Until EPA’s Ethics Office periodically evaluates—for example, through audits or spot-checks—the quality of financial disclosure reviews conducted for SGEs appointed to EPA advisory committees, it will not have reasonable assurance that it will address noncompliance with federal ethics requirements and prevent conflicts of interest among SGEs appointed to EPA advisory committees. We are making the following two recommendations to EPA: The EPA Administrator should direct EPA officials responsible for appointing advisory committee members to follow a key step in its appointment process—developing and including draft membership grids in appointment packets with staff rationales for proposed membership— for all committees. (Recommendation 1) EPA’s Designated Agency Ethics Official should direct EPA’s Ethics Office, as part of its periodic review of EPA’s ethics program, to evaluate—for example, through audits or spot-checks—the quality of financial disclosure reviews for special government employees appointed to EPA advisory committees.
+
+    🧠 NLI (DeBERTa): Apoio: 98.3% | Contradição: 0.5% | Neutro: 1.2%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 6, 'token_original': 'reviewed', 'lemma_original': 'review', 'tipo_erro': 'predicate', 'estrategia': 'negation', 'token_injetado': 'did not review', 'lemma_injetado': 'NOT_review'}
+--------------------------------------------------------------------------------
+
+[8] CLAIM (Frase do Resumo):
+    Based on GAO's review of U.S. Environmental Protection Agency's (EPA) guidance, the agency's established process for appointing advisory committee members obviates three main phases: soliciting nominations, evaluating candidates, and obtaining approvals.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    These phases are soliciting nominations, evaluating candidates, and obtaining approvals from relevant EPA offices, such as the Federal Advisory Committee Management Division, before the Administrator or Deputy Administrator makes final appointment decisions.
+
+    🧠 NLI (DeBERTa): Apoio: 0.1% | Contradição: 99.3% | Neutro: 0.6%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 7, 'token_original': 'involves', 'lemma_original': 'involve', 'tipo_erro': 'predicate', 'estrategia': 'antonym', 'token_injetado': 'obviates', 'lemma_injetado': 'obviate'}
+--------------------------------------------------------------------------------
+
+[9] CLAIM (Frase do Resumo):
+    Each phase involves several steps.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    As shown in figure 1, each of the three main phases in EPA’s process involves several smaller steps.
+
+    🧠 NLI (DeBERTa): Apoio: 99.2% | Contradição: 0.1% | Neutro: 0.7%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[10] CLAIM (Frase do Resumo):
+    For example, a key step for evaluating candidates involves EPA staff's preparing documents that reflect staff recommendations on the best qualified and most appropriate candidates for achieving balanced committee membership, according to EPA guidance.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    There may be benefits to following different procedures; however, under EPA’s established process, agency staff are to document in draft membership grids and include in appointment packets their rationales for recommending the candidates they deem best qualified and most appropriate for achieving balanced committees.
+
+    🧠 NLI (DeBERTa): Apoio: 99.7% | Contradição: 0.0% | Neutro: 0.3%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['entity']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[11] CLAIM (Frase do Resumo):
+    EPA generally followed its established process for most of its 22 advisory committees; however, in fiscal year 2018, EPA did not follow a key step for appointing 20 committee members to two committees GAO reviewed: the EPA Science Advisory Board and Clean Air Scientific Advisory Committee, which advise the agency on environmental regulatory matters, among other things.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    Additionally, 21 of the 22 appointment packets we reviewed contained documentation showing that EPA’s Office of General Counsel reviewed the proposed membership prior to appointment, as recommended by EPA’s Federal Advisory Committee Handbook. Figure 2 shows EPA’s established process and the steps we reviewed. For additional information about the extent to which EPA followed its process for appointing committee members, see appendix III. However, EPA did not follow a key step in its established process for appointing 20 members in fiscal year 2018 to the SAB and CASAC, which advise the agency on environmental regulatory matters, among other things. Specifically, the fiscal year 2018 appointment packets for the SAB and CASAC did not include draft membership grid documents reflecting EPA staff rationales for recommending the candidates EPA’s staff deem best qualified and most appropriate for achieving balanced committee membership.
+
+    🧠 NLI (DeBERTa): Apoio: 99.7% | Contradição: 0.1% | Neutro: 0.3%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[12] CLAIM (Frase do Resumo):
+    The 2018 appointment packets for these two committees did not contain documents reflecting EPA staff rationales for proposed membership, as called for by EPA's established process.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    However, it remains that for SAB and CASAC, EPA did not follow a key step in its established appointment process—as documented in its agency-wide handbook—in which agency staff are to document in draft membership grids their rationales for recommending the candidates they deem best qualified and most appropriate for achieving balanced committees.
+
+    🧠 NLI (DeBERTa): Apoio: 93.8% | Contradição: 0.0% | Neutro: 6.2%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[13] CLAIM (Frase do Resumo):
+    EPA developed guidance to implement the Federal Advisory Committee Act (FACA).
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    For example, EPA’s Federal Advisory Committee Management Division—which has overall responsibility for committee management and ensuring that EPA’s advisory committees comply with FACA—developed the Federal Advisory Committee Handbook to clarify roles and responsibilities for complying with relevant requirements.
+
+    🧠 NLI (DeBERTa): Apoio: 98.8% | Contradição: 0.1% | Neutro: 1.1%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['entity']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[14] CLAIM (Frase do Resumo):
+    By directing officials responsible for appointing committee members to follow a key step in its process to document staff rationales for proposed membership, the agency would have better assurance that it will (1) consistently diverge FACA's purpose of encouraging uniform appointment procedures and (2) show how it made appointment decisions to achieve the best qualified and most appropriate candidates for balanced committee membership.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    We agree that conducting such briefings is within the discretion of the EPA Administrator, and we did not assess the outcomes of the membership appointment process. However, it remains that for SAB and CASAC, EPA did not follow a key step in its established appointment process—as documented in its agency-wide handbook—in which agency staff are to document in draft membership grids their rationales for recommending the candidates they deem best qualified and most appropriate for achieving balanced committees. While there may be benefits to following any number of alternative processes for appointing committee members, as EPA stated in its Federal Advisory Committee Advisory Handbook, EPA developed the handbook to help agency officials comply with FACA requirements. For these two advisory committees, EPA did not follow its established committee appointment process, impeding EPA’s ability to ensure that it consistently meets— across all of its advisory committees—FACA’s purpose of encouraging uniform committee appointment procedures. Furthermore, EPA did not provide documentation of the “more rigorous examination” of candidates it conducted in briefings.
+
+    🧠 NLI (DeBERTa): Apoio: 99.5% | Contradição: 0.2% | Neutro: 0.3%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 13, 'token_original': 'meet', 'lemma_original': 'meet', 'tipo_erro': 'predicate', 'estrategia': 'antonym', 'token_injetado': 'diverge', 'lemma_injetado': 'diverge'}
+--------------------------------------------------------------------------------
+
+[15] CLAIM (Frase do Resumo):
+    EPA also did not consistently ensure that members appointed as special government employees (SGE)—who are expected to provide their best judgment free from conflicts of interest and are required by federal regulations to disclose their financial interests—met federal ethics requirements.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    We also found that EPA’s Ethics Office had not periodically evaluated, through audits or spot-checks, the quality of financial disclosure reviews conducted by its deputy ethics officials for SGEs appointed to advisory committees, as part of the periodic review of its ethics program called for by OGE regulations.
+
+    🧠 NLI (DeBERTa): Apoio: 97.6% | Contradição: 0.1% | Neutro: 2.3%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[16] CLAIM (Frase do Resumo):
+    For about 23 percent, or 17 of the 74 financial disclosure forms GAO reviewed, an ethics official had not signed and dated that the SGE filing the form was in compliance with federal ethics rules.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    In addition, for about 57 percent, or 42 of the 74 forms we reviewed, we were unable to determine whether an ethics official had reviewed the financial disclosure forms within 60 days after they were filed because the forms did not indicate when EPA had received them. Table 1 illustrates the extent to which EPA took steps to ensure compliance with federal financial-disclosure-reporting requirements relevant to SGEs during this time period. In 2017, OGE found similar weaknesses in EPA’s ethics program. For example, when OGE reviewed a sample of EPA advisory committees’ ethics documents from 2015, it found that none of the financial disclosure forms for one committee had been reviewed—or signed and dated—by an ethics official to indicate that filers were in conformance with federal ethics rules. For two other committees, OGE found that EPA had not received in 2015 certain financial-disclosure forms that were due that year.
+
+    🧠 NLI (DeBERTa): Apoio: 98.0% | Contradição: 1.6% | Neutro: 0.4%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[17] CLAIM (Frase do Resumo):
+    EPA also did not periodically review its ethics program, as called for by federal regulations, such as through audits or spot-checks, to evaluate the quality of financial disclosure reviews for SGEs.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA also did not consistently ensure that committee members appointed as SGEs met federal ethics requirements, and as part of its periodic review of its ethics program, EPA did not evaluate through audits or spot- checks the quality of financial disclosure reviews conducted by deputy ethics officials for these committee members.
+
+    🧠 NLI (DeBERTa): Apoio: 91.4% | Contradição: 0.1% | Neutro: 8.5%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[18] CLAIM (Frase do Resumo):
+    Until EPA's Ethics Office evaluates the quality of financial disclosure reviews of SGEs as part of its periodic review of its ethics program, it will not have reasonable assurance that it will address noncompliance with federal ethics requirements and prevent conflicts of interest on its advisory committees.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    Until EPA’s Ethics Office, as part of its periodic review of its ethics program, evaluates—for example, through audits or spot-checks—the quality of financial disclosure reviews conducted for SGEs appointed to EPA advisory committees, it will not have reasonable assurance that it is addressing noncompliance with federal ethics requirements and preventing conflicts of interest among SGEs appointed to EPA advisory committees.
+
+    🧠 NLI (DeBERTa): Apoio: 99.8% | Contradição: 0.0% | Neutro: 0.1%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[19] CLAIM (Frase do Resumo):
+    Based on GAO's review of the U.S. General Services Administration's (GSA) FACA database, there were notable changes to selected characteristics of EPA advisory committees (i.e. at least a 20 percentage point difference in the change to a characteristic after January 2017 compared to the period after January 2009).
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    To describe how, if at all, selected characteristics of EPA’s advisory committees changed after January 2017, we analyzed information from the FACA database, a publically-available database maintained by GSA.
+
+    🧠 NLI (DeBERTa): Apoio: 0.1% | Contradição: 0.1% | Neutro: 99.8%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['entity']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[20] CLAIM (Frase do Resumo):
+    Of the four characteristics GAO reviewed—committee composition, regional affiliation, membership turnover, and number of meetings committees held—one or more of the first three changed notably for four of 18 EPA advisory committees after January 2017.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA generally followed its established process for 15 of the 17 advisory committees that appointed or reappointed committee members during the time period we reviewed.
+
+    🧠 NLI (DeBERTa): Apoio: 0.1% | Contradição: 93.3% | Neutro: 6.6%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[21] CLAIM (Frase do Resumo):
+    GAO is recommending that EPA direct (1) officials responsible for appointing committee members to follow a key step in its appointment process to document staff rationales for proposed membership and (2) EPA's Ethics Office to evaluate the quality of financial disclosure reviews of SGEs appointed to advisory committees.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    By directing officials responsible for appointing committee members to prepare draft membership grids and include them in appointment packets for all committees, the agency would have better assurance that it could show how it made appointment decisions to achieve the best qualified and most appropriate candidates for balanced committee membership. EPA also did not consistently ensure that committee members appointed as SGEs met federal ethics requirements, and as part of its periodic review of its ethics program, EPA did not evaluate through audits or spot- checks the quality of financial disclosure reviews conducted by deputy ethics officials for these committee members. Until EPA’s Ethics Office periodically evaluates—for example, through audits or spot-checks—the quality of financial disclosure reviews conducted for SGEs appointed to EPA advisory committees, it will not have reasonable assurance that it will address noncompliance with federal ethics requirements and prevent conflicts of interest among SGEs appointed to EPA advisory committees. We are making the following two recommendations to EPA: The EPA Administrator should direct EPA officials responsible for appointing advisory committee members to follow a key step in its appointment process—developing and including draft membership grids in appointment packets with staff rationales for proposed membership— for all committees. (Recommendation 1) EPA’s Designated Agency Ethics Official should direct EPA’s Ethics Office, as part of its periodic review of EPA’s ethics program, to evaluate—for example, through audits or spot-checks—the quality of financial disclosure reviews for special government employees appointed to EPA advisory committees. (Recommendation 2) We provided a draft of this report to EPA for review and comment. In its written comments, reproduced in appendix IV, EPA disagreed with a key finding related to the first recommendation, with how we conducted some of our data analyses, and with some of the data points we presented. EPA agreed with the findings and conclusions related to the second recommendation. EPA also provided other comments, which we incorporated as appropriate.
+
+    🧠 NLI (DeBERTa): Apoio: 99.5% | Contradição: 0.1% | Neutro: 0.5%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[22] CLAIM (Frase do Resumo):
+    EPA disagreed with the first and agreed with the second recommendation.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA agreed with the findings and conclusions related to the second recommendation.
+
+    🧠 NLI (DeBERTa): Apoio: 0.1% | Contradição: 0.3% | Neutro: 99.6%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[23] CLAIM (Frase do Resumo):
+    GAO continues to believe that both are valid, as discussed in the report.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    In addition, the report will be available at no charge on the GAO website at http://www.gao.gov.
+
+    🧠 NLI (DeBERTa): Apoio: 0.0% | Contradição: 0.0% | Neutro: 100.0%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+
+
+################################################################################
+🟢 RAIO-X DAS COMPARAÇÕES: COREFERENCE
+################################################################################
+
+[1] CLAIM (Frase do Resumo):
+    Federal advisory committees provide advice to federal agencies on many topics.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA’s federal advisory committees play an important role in advising the agency.
+
+    🧠 NLI (DeBERTa): Apoio: 5.6% | Contradição: 0.0% | Neutro: 94.4%
+    📊 Status Final:  NOT_SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[2] CLAIM (Frase do Resumo):
+    As of March 31, 2018, EPA managed 22 such committees.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    See appendix II for a list of EPA’s 22 advisory committees as of March 31, 2018.
+
+    🧠 NLI (DeBERTa): Apoio: 99.6% | Contradição: 0.0% | Neutro: 0.4%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[3] CLAIM (Frase do Resumo):
+    She advise the agency on such issues as developing regulations and managing research programs.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA also can appoint different types of members to its advisory committees, depending on the needs of its committees and other considerations. For instance, EPA may appoint a committee member as a federal government employee under an appropriate hiring authority. If EPA expects a federal employee to serve no more than 130 days in any 365-day period, guidance from the U.S. Office of Government Ethics (OGE), which oversees the executive branch’s ethics program, states that the employee should be designated as a special government employee (SGE). If EPA decides not to appoint the committee member as a federal employee, that committee member would be a non-employee representative. EPA decides whether to appoint committee members as federal employees. To help federal agencies such as EPA determine whether to designate committee members as SGEs or representatives, OGE has developed guidance on factors to consider when agencies make these determinations. For example, OGE guidance states that SGEs are expected to provide independent expert advice and provide their best judgment free from conflicts of interest. They are generally subject to federal ethics regulations placed on other federal employees—including the requirement to file financial disclosure forms. In addition, OGE guidance states that representatives serve as the voice of groups or entities with a financial or other stake in a particular matter before an advisory committee. Federal ethics regulations generally do not apply to representative members on FACA committees. GSA has certain government-wide responsibilities for implementing FACA, including maintaining the government-wide FACA database that tracks certain characteristics of advisory committees. Specifically, FACA requires GSA to comprehensively review the activities and responsibilities of each advisory committee annually, including the committees for which EPA officials are responsible. In turn, GSA requires federal agencies responsible for advisory committees to enter data about those committees into the database. GSA and the responsible agency (e.g., EPA) review the data on a fiscal year basis for accuracy and completeness. These reviews are typically completed by February or March of the following year.
+
+    🧠 NLI (DeBERTa): Apoio: 93.9% | Contradição: 2.1% | Neutro: 4.0%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 2, 'tipo_erro': 'coreference', 'estrategia': 'pronoun_swap', 'token_original': 'They', 'token_injetado': 'She', 'antecedente_original': '22 such committees', 'antecedente_sentenca_index': 1, 'numero_original': 'Plur', 'numero_antecedente': 'Plur'}
+--------------------------------------------------------------------------------
+
+[4] CLAIM (Frase do Resumo):
+    Questions have been raised about EPA's process for appointing committee members after recent policy changes affecting who serves on the advisory committees.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA stated that this is within the discretion of the EPA Administrator and that the vetting of candidates for SAB and CASAC occurred in a different manner than in previous years with a process more robust than membership grids.
+
+    🧠 NLI (DeBERTa): Apoio: 96.7% | Contradição: 0.1% | Neutro: 3.2%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[5] CLAIM (Frase do Resumo):
+    GAO was asked to review issues related to how EPA appoints advisory committee members.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    We are making the following two recommendations to EPA: The EPA Administrator should direct EPA officials responsible for appointing advisory committee members to follow a key step in its appointment process—developing and including draft membership grids in appointment packets with staff rationales for proposed membership— for all committees.
+
+    🧠 NLI (DeBERTa): Apoio: 94.8% | Contradição: 0.0% | Neutro: 5.2%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[6] CLAIM (Frase do Resumo):
+    This report examines: (1) EPA's process for appointing advisory committee members, (2) the extent to which EPA followed its process for selecting members from October 2016 through March 2018, and (3) how, if at all, selected characteristics of EPA advisory committees changed after January 2017.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    For the fourth characteristic, we compared across committees the number of meetings held in the 15 months before January 20, 2009 and January 20, 2017, to a similar period after those dates (November 12, 2007, to March 31, 2010, or November 12, 2015, to March 31, 2018).
+
+    🧠 NLI (DeBERTa): Apoio: 77.3% | Contradição: 3.3% | Neutro: 19.3%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[7] CLAIM (Frase do Resumo):
+    GAO reviewed relevant federal laws, regulations, and guidance; reviewed documents from committees that appointed members over this period; analyzed information from the GSA's FACA database; and interviewed agency officials.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    To describe the U.S. Environmental Protection Agency’s (EPA) established process for appointing members to serve on EPA advisory committees, we identified and reviewed the federal laws, regulations, and policies that are relevant to EPA’s process for appointing advisory committee members. To ensure that we correctly identified all relevant laws, regulations, and guidance, we consulted with: (1) the Committee Management Secretariat at the U.S. General Services Administration (GSA), which issues regulations and guidance for Federal Advisory Committee Act (FACA) committees government-wide; (2) the U.S. Office of Government Ethics, which develops ethics-related regulations for executive branch employees; and (3) EPA. Examples of EPA guidance that we reviewed include EPA’s Federal Advisory Committee Handbook, Strengthening and Improving Membership on EPA Federal Advisory Committees, and EPA Ethics Advisory 2008-02. To evaluate the extent to which EPA followed its established process for appointing members from fiscal year 2017 through the first two quarters of fiscal year 2018, we reviewed pertinent documentation from the 17 committees that appointed or reappointed advisory committee members during this time frame. The remaining committees did not appoint any committee members during the time frame we reviewed. For the above- mentioned 17 committees, we reviewed all advisory committee appointment packets—each of which can contain appointment documents for numerous appointees or reappointees—produced during this time. We also reviewed the first section (Section 1: Identifying Information and Record of Agency Review) of the Confidential Financial Disclosure Form for EPA Special Government Employees (EPA Form 3110-48) for 74 individuals who were required to submit them to EPA to determine if they met federal financial-disclosure-reporting requirements. We reviewed all 74 of the forms provided by the 8 committees that appointed or reappointed special government employees (SGE) to serve on a committee from fiscal year 2017 through the first two quarters of fiscal year 2018. Additionally, we interviewed EPA officials involved with appointing committee members to understand the steps these officials took.
+
+    🧠 NLI (DeBERTa): Apoio: 99.7% | Contradição: 0.0% | Neutro: 0.2%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[8] CLAIM (Frase do Resumo):
+    Based on GAO's review of U.S. Environmental Protection Agency's (EPA) guidance, the agency's established process for appointing advisory committee members involves three main phases: soliciting nominations, evaluating candidates, and obtaining approvals.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    Based on our review of EPA’s Federal Advisory Committee Handbook, the agency’s established process for appointing advisory committee members includes three main phases.
+
+    🧠 NLI (DeBERTa): Apoio: 0.1% | Contradição: 0.0% | Neutro: 99.9%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[9] CLAIM (Frase do Resumo):
+    Each phase involves several steps.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    As shown in figure 1, each of the three main phases in EPA’s process involves several smaller steps.
+
+    🧠 NLI (DeBERTa): Apoio: 99.2% | Contradição: 0.1% | Neutro: 0.7%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[10] CLAIM (Frase do Resumo):
+    For example, a key step for evaluating candidates involves EPA staff's preparing documents that reflect staff recommendations on the best qualified and most appropriate candidates for achieving balanced committee membership, according to EPA guidance.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    There may be benefits to following different procedures; however, under EPA’s established process, agency staff are to document in draft membership grids and include in appointment packets their rationales for recommending the candidates they deem best qualified and most appropriate for achieving balanced committees.
+
+    🧠 NLI (DeBERTa): Apoio: 99.7% | Contradição: 0.0% | Neutro: 0.3%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['entity']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[11] CLAIM (Frase do Resumo):
+    EPA generally followed its established process for most of their 22 advisory committees; however, in fiscal year 2018, EPA did not follow a key step for appointing 20 committee members to two committees GAO reviewed: the EPA Science Advisory Board and Clean Air Scientific Advisory Committee, which advise the agency on environmental regulatory matters, among other things.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    Additionally, 21 of the 22 appointment packets we reviewed contained documentation showing that EPA’s Office of General Counsel reviewed the proposed membership prior to appointment, as recommended by EPA’s Federal Advisory Committee Handbook. Figure 2 shows EPA’s established process and the steps we reviewed. For additional information about the extent to which EPA followed its process for appointing committee members, see appendix III. However, EPA did not follow a key step in its established process for appointing 20 members in fiscal year 2018 to the SAB and CASAC, which advise the agency on environmental regulatory matters, among other things. Specifically, the fiscal year 2018 appointment packets for the SAB and CASAC did not include draft membership grid documents reflecting EPA staff rationales for recommending the candidates EPA’s staff deem best qualified and most appropriate for achieving balanced committee membership.
+
+    🧠 NLI (DeBERTa): Apoio: 99.7% | Contradição: 0.1% | Neutro: 0.2%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 10, 'tipo_erro': 'coreference', 'estrategia': 'pronoun_swap', 'token_original': 'its', 'token_injetado': 'their', 'antecedente_original': 'example', 'antecedente_sentenca_index': 9, 'numero_original': 'Sing', 'numero_antecedente': 'Sing'}
+--------------------------------------------------------------------------------
+
+[12] CLAIM (Frase do Resumo):
+    The 2018 appointment packets for these two committees did not contain documents reflecting EPA staff rationales for proposed membership, as called for by EPA's established process.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    However, it remains that for SAB and CASAC, EPA did not follow a key step in its established appointment process—as documented in its agency-wide handbook—in which agency staff are to document in draft membership grids their rationales for recommending the candidates they deem best qualified and most appropriate for achieving balanced committees.
+
+    🧠 NLI (DeBERTa): Apoio: 93.8% | Contradição: 0.0% | Neutro: 6.2%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[13] CLAIM (Frase do Resumo):
+    EPA developed guidance to implement the Federal Advisory Committee Act (FACA).
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    For example, EPA’s Federal Advisory Committee Management Division—which has overall responsibility for committee management and ensuring that EPA’s advisory committees comply with FACA—developed the Federal Advisory Committee Handbook to clarify roles and responsibilities for complying with relevant requirements.
+
+    🧠 NLI (DeBERTa): Apoio: 98.8% | Contradição: 0.1% | Neutro: 1.1%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['entity']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[14] CLAIM (Frase do Resumo):
+    By directing officials responsible for appointing committee members to follow a key step in its process to document staff rationales for proposed membership, the agency would have better assurance that it will (1) consistently meet FACA's purpose of encouraging uniform appointment procedures and (2) show how it made appointment decisions to achieve the best qualified and most appropriate candidates for balanced committee membership.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    However, under EPA’s established process, agency staff are to document in draft membership grids and include in appointment packets their rationales for recommending the candidates they deem best qualified and most appropriate for achieving balanced committees. EPA developed guidance to implement FACA, one purpose of which is to encourage the establishment of uniform committee appointment and administration procedures. In written comments on the draft report, EPA noted that agency staff documented evaluations of advisory committee candidates in briefing documents. However, EPA did not provide these documents along with its comments. Moreover, neither these evaluations nor summaries of public comments were included in the packets that EPA’s Federal Advisory Committee Handbook indicates are to contain committee appointment information, impeding EPA’s ability to ensure that it consistently meets—across all of its advisory committees—FACA’s purpose of encouraging uniform committee appointment procedures.
+
+    🧠 NLI (DeBERTa): Apoio: 99.6% | Contradição: 0.0% | Neutro: 0.4%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[15] CLAIM (Frase do Resumo):
+    EPA also did not consistently ensure that members appointed as special government employees (SGE)—who are expected to provide its best judgment free from conflicts of interest and are required by federal regulations to disclose their financial interests—met federal ethics requirements.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    We also found that EPA’s Ethics Office had not periodically evaluated, through audits or spot-checks, the quality of financial disclosure reviews conducted by its deputy ethics officials for SGEs appointed to advisory committees, as part of the periodic review of its ethics program called for by OGE regulations.
+
+    🧠 NLI (DeBERTa): Apoio: 96.6% | Contradição: 0.1% | Neutro: 3.2%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 14, 'tipo_erro': 'coreference', 'estrategia': 'pronoun_swap', 'token_original': 'their', 'token_injetado': 'its', 'antecedente_original': 'officials', 'antecedente_sentenca_index': 13, 'numero_original': 'Plur', 'numero_antecedente': 'Plur'}
+--------------------------------------------------------------------------------
+
+[16] CLAIM (Frase do Resumo):
+    For about 23 percent, or 17 of the 74 financial disclosure forms GAO reviewed, an ethics official had not signed and dated that the SGE filing the form was in compliance with federal ethics rules.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    In addition, for about 57 percent, or 42 of the 74 forms we reviewed, we were unable to determine whether an ethics official had reviewed the financial disclosure forms within 60 days after they were filed because the forms did not indicate when EPA had received them. Table 1 illustrates the extent to which EPA took steps to ensure compliance with federal financial-disclosure-reporting requirements relevant to SGEs during this time period. In 2017, OGE found similar weaknesses in EPA’s ethics program. For example, when OGE reviewed a sample of EPA advisory committees’ ethics documents from 2015, it found that none of the financial disclosure forms for one committee had been reviewed—or signed and dated—by an ethics official to indicate that filers were in conformance with federal ethics rules. For two other committees, OGE found that EPA had not received in 2015 certain financial-disclosure forms that were due that year.
+
+    🧠 NLI (DeBERTa): Apoio: 98.0% | Contradição: 1.6% | Neutro: 0.4%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[17] CLAIM (Frase do Resumo):
+    EPA also did not periodically review their ethics program, as called for by federal regulations, such as through audits or spot-checks, to evaluate the quality of financial disclosure reviews for SGEs.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA also did not consistently ensure that committee members appointed as SGEs met federal ethics requirements, and as part of its periodic review of its ethics program, EPA did not evaluate through audits or spot- checks the quality of financial disclosure reviews conducted by deputy ethics officials for these committee members.
+
+    🧠 NLI (DeBERTa): Apoio: 89.5% | Contradição: 0.1% | Neutro: 10.4%
+    📊 Status Final:  SUPPORTED
+    🔬 Regras spaCy:  []
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 16, 'tipo_erro': 'coreference', 'estrategia': 'pronoun_swap', 'token_original': 'its', 'token_injetado': 'their', 'antecedente_original': 'about 23 percent', 'antecedente_sentenca_index': 15, 'numero_original': 'Sing', 'numero_antecedente': 'Sing'}
+--------------------------------------------------------------------------------
+
+[18] CLAIM (Frase do Resumo):
+    Until EPA's Ethics Office evaluates the quality of financial disclosure reviews of SGEs as part of its periodic review of its ethics program, it will not have reasonable assurance that it will address noncompliance with federal ethics requirements and prevent conflicts of interest on their advisory committees.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    Until EPA’s Ethics Office, as part of its periodic review of its ethics program, evaluates—for example, through audits or spot-checks—the quality of financial disclosure reviews conducted for SGEs appointed to EPA advisory committees, it will not have reasonable assurance that it is addressing noncompliance with federal ethics requirements and preventing conflicts of interest among SGEs appointed to EPA advisory committees.
+
+    🧠 NLI (DeBERTa): Apoio: 99.8% | Contradição: 0.0% | Neutro: 0.2%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ⚠️ ERRO INJETADO PELO GERADOR: {'sentenca_index': 17, 'tipo_erro': 'coreference', 'estrategia': 'pronoun_swap', 'token_original': 'its', 'token_injetado': 'their', 'antecedente_original': 'EPA', 'antecedente_sentenca_index': 16, 'numero_original': 'Sing', 'numero_antecedente': 'Sing'}
+--------------------------------------------------------------------------------
+
+[19] CLAIM (Frase do Resumo):
+    Based on GAO's review of the U.S. General Services Administration's (GSA) FACA database, there were notable changes to selected characteristics of EPA advisory committees (i.e. at least a 20 percentage point difference in the change to a characteristic after January 2017 compared to the period after January 2009).
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    To describe how, if at all, selected characteristics of EPA’s advisory committees changed after January 2017, we analyzed information from the FACA database, a publically-available database maintained by GSA.
+
+    🧠 NLI (DeBERTa): Apoio: 0.1% | Contradição: 0.1% | Neutro: 99.8%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['entity']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[20] CLAIM (Frase do Resumo):
+    Of the four characteristics GAO reviewed—committee composition, regional affiliation, membership turnover, and number of meetings committees held—one or more of the first three changed notably for four of 18 EPA advisory committees after January 2017.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA generally followed its established process for 15 of the 17 advisory committees that appointed or reappointed committee members during the time period we reviewed.
+
+    🧠 NLI (DeBERTa): Apoio: 0.1% | Contradição: 93.3% | Neutro: 6.6%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[21] CLAIM (Frase do Resumo):
+    GAO is recommending that EPA direct (1) officials responsible for appointing committee members to follow a key step in its appointment process to document staff rationales for proposed membership and (2) EPA's Ethics Office to evaluate the quality of financial disclosure reviews of SGEs appointed to advisory committees.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    By directing officials responsible for appointing committee members to prepare draft membership grids and include them in appointment packets for all committees, the agency would have better assurance that it could show how it made appointment decisions to achieve the best qualified and most appropriate candidates for balanced committee membership. EPA also did not consistently ensure that committee members appointed as SGEs met federal ethics requirements, and as part of its periodic review of its ethics program, EPA did not evaluate through audits or spot- checks the quality of financial disclosure reviews conducted by deputy ethics officials for these committee members. Until EPA’s Ethics Office periodically evaluates—for example, through audits or spot-checks—the quality of financial disclosure reviews conducted for SGEs appointed to EPA advisory committees, it will not have reasonable assurance that it will address noncompliance with federal ethics requirements and prevent conflicts of interest among SGEs appointed to EPA advisory committees. We are making the following two recommendations to EPA: The EPA Administrator should direct EPA officials responsible for appointing advisory committee members to follow a key step in its appointment process—developing and including draft membership grids in appointment packets with staff rationales for proposed membership— for all committees. (Recommendation 1) EPA’s Designated Agency Ethics Official should direct EPA’s Ethics Office, as part of its periodic review of EPA’s ethics program, to evaluate—for example, through audits or spot-checks—the quality of financial disclosure reviews for special government employees appointed to EPA advisory committees. (Recommendation 2) We provided a draft of this report to EPA for review and comment. In its written comments, reproduced in appendix IV, EPA disagreed with a key finding related to the first recommendation, with how we conducted some of our data analyses, and with some of the data points we presented. EPA agreed with the findings and conclusions related to the second recommendation. EPA also provided other comments, which we incorporated as appropriate.
+
+    🧠 NLI (DeBERTa): Apoio: 99.5% | Contradição: 0.1% | Neutro: 0.5%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[22] CLAIM (Frase do Resumo):
+    EPA disagreed with the first and agreed with the second recommendation.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    EPA agreed with the findings and conclusions related to the second recommendation.
+
+    🧠 NLI (DeBERTa): Apoio: 0.1% | Contradição: 0.3% | Neutro: 99.6%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+[23] CLAIM (Frase do Resumo):
+    GAO continues to believe that both are valid, as discussed in the report.
+
+    SENTENÇA RECUPERADA (A Prova do Texto Original):
+    In addition, the report will be available at no charge on the GAO website at http://www.gao.gov.
+
+    🧠 NLI (DeBERTa): Apoio: 0.0% | Contradição: 0.0% | Neutro: 100.0%
+    📊 Status Final:  CONTRADICTED
+    🔬 Regras spaCy:  ['predicate']
+    ✅ FRASE INOCENTE (Nenhum erro injetado aqui)
+--------------------------------------------------------------------------------
+
+
+================================================================================
+🏆 RELATÓRIO DE METAVALIAÇÃO CONSOLIDADO (REGISTRO ÍNDICE 1)
+================================================================================
+
+============================================================
+📊 MATRIZ GLOBAIS: ORIGINAL
+============================================================
+             predicate  entity  coreference  other
+predicate            0       0            0      0
+entity               0       0            0      0
+coreference          0       0            0      0
+other                0       0            0      0
+nenhum_fp           13       3            0      1
+------------------------------------------------------------
+ Verdadeiros Positivos (TP)    : 0
+ Diagnósticos Corretos        : 0 (Diagonal Principal)
+ Falsos Negativos (FN)        : 0
+ Falsos Positivos Totais (FP) : 17
+   ├─ Falsas Alucinações (Contradição) : 16
+   └─ Paráfrases Distantes (Neutro)    : 1
+ Score Médio do FENICE (0 a 1) : 0.3855
+============================================================
+
+============================================================
+📊 MATRIZ GLOBAIS: ENTITY
+============================================================
+             predicate  entity  coreference  other
+predicate            0       0            0      0
+entity               2       1            0      0
+coreference          0       0            0      0
+other                0       0            0      0
+nenhum_fp           10       3            0      1
+------------------------------------------------------------
+ Verdadeiros Positivos (TP)    : 3
+ Diagnósticos Corretos        : 1 (Diagonal Principal)
+ Falsos Negativos (FN)        : 2
+ Falsos Positivos Totais (FP) : 14
+   ├─ Falsas Alucinações (Contradição) : 13
+   └─ Paráfrases Distantes (Neutro)    : 1
+ Score Médio do FENICE (0 a 1) : 0.3665
+============================================================
+
+============================================================
+📊 MATRIZ GLOBAIS: PREDICATE
+============================================================
+             predicate  entity  coreference  other
+predicate            4       0            0      1
+entity               0       0            0      0
+coreference          0       0            0      0
+other                0       0            0      0
+nenhum_fp            9       3            0      1
+------------------------------------------------------------
+ Verdadeiros Positivos (TP)    : 5
+ Diagnósticos Corretos        : 4 (Diagonal Principal)
+ Falsos Negativos (FN)        : 0
+ Falsos Positivos Totais (FP) : 13
+   ├─ Falsas Alucinações (Contradição) : 12
+   └─ Paráfrases Distantes (Neutro)    : 1
+ Score Médio do FENICE (0 a 1) : 0.3295
+============================================================
+
+============================================================
+📊 MATRIZ GLOBAIS: COREFERENCE
+============================================================
+             predicate  entity  coreference  other
+predicate            0       0            0      0
+entity               0       0            0      0
+coreference          2       0            0      0
+other                0       0            0      0
+nenhum_fp           10       3            0      1
+------------------------------------------------------------
+ Verdadeiros Positivos (TP)    : 2
+ Diagnósticos Corretos        : 0 (Diagonal Principal)
+ Falsos Negativos (FN)        : 3
+ Falsos Positivos Totais (FP) : 14
+   ├─ Falsas Alucinações (Contradição) : 13
+   └─ Paráfrases Distantes (Neutro)    : 1
+ Score Médio do FENICE (0 a 1) : 0.4074
+============================================================

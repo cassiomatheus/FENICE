@@ -16,6 +16,8 @@ from datasets import load_dataset
 import json
 import lemminflect
 from spacy.tokens import Doc
+import random
+from typing import Dict, List, Tuple, Optional, Any
 
 # Carrega modelo de língua inglesa MÉDIO (Necessário para os word vectors do Entity Swap)
 nlp = spacy.load("en_core_web_md")
@@ -256,9 +258,7 @@ def inject_realistic_coreference_errors_antigo(
     erros.reverse()
     return resumo_texto_mutavel, len(erros), erros
 
-
-
-def inject_realistic_coreference_errors(
+def inject_realistic_coreference_errors_v1(
     resumo_orig: str,
     fonte_orig: str,
     num_erros=2
@@ -377,6 +377,412 @@ def inject_realistic_coreference_errors(
     erros.reverse()
     return resumo_texto_mutavel, len(erros), erros
 
+
+def inject_realistic_coreference_errors(
+    resumo_orig: str,
+    fonte_orig: str,
+    num_erros: int = 2
+) -> Tuple[str, int, List[Dict[str, Any]]]:
+    """
+    Injeta inconsistências controladas de correferência em um resumo.
+
+    Estratégia:
+    1. Identifica pronomes sujeitos referenciais no resumo.
+    2. Exige a existência de um antecedente nominal identificável
+       nas sentenças anteriores do resumo.
+    3. Não substitui o pronome por uma entidade nominal, evitando
+       confundir erro de correferência com erro de entidade.
+    4. Substitui o pronome por outro pronome semanticamente incompatível
+       dentro de um conjunto controlado, preservando sua função sintática.
+    5. Mantém no máximo uma alteração por sentença.
+    6. Registra o antecedente original e a transformação aplicada,
+       permitindo construir o ground truth da perturbação.
+
+    Observação:
+        A implementação é deliberadamente restrita a pronomes sujeitos
+        com antecedente nominal identificável no contexto local. Isso evita
+        tentar resolver correferência geral, que exigiria um resolvedor
+        especializado e introduziria maior complexidade.
+    """
+
+    if not resumo_orig or not fonte_orig or num_erros <= 0:
+        return resumo_orig, 0, []
+
+    doc_resumo = nlp(resumo_orig)
+
+    sentencas = list(doc_resumo.sents)
+
+    if not sentencas:
+        return resumo_orig, 0, []
+
+    # ============================================================
+    # 1. PRONOMES ELEGÍVEIS
+    # ============================================================
+    #
+    # Restrição:
+    # - somente pronomes pessoais;
+    # - somente função de sujeito;
+    # - somente he, she ou they;
+    # - it é excluído para evitar construções expletivas/dummy it;
+    # - PRP$ não é considerado, pois a proposta atual trabalha apenas
+    #   com pronomes sujeitos.
+    #
+    # Isso evita:
+    #     They -> The Department of Labor
+    #
+    # e passa a produzir:
+    #     They -> He
+    #
+    # ou:
+    #     She -> He
+    #
+    # mantendo a mesma função sintática.
+
+    PRONOMES_ELEGIVEIS = {
+        "he",
+        "she",
+        "they",
+    }
+
+    # ============================================================
+    # 2. REGRAS DE SUBSTITUIÇÃO
+    # ============================================================
+    #
+    # A troca é deliberadamente restrita.
+    #
+    # he   -> she
+    # she  -> he
+    # they -> he/she
+    #
+    # Isso produz uma alteração referencial sem inserir uma entidade
+    # nominal nova e sem modificar o predicado.
+    #
+    # A escolha de he/she para "they" também cria uma incompatibilidade
+    # explícita de número quando "they" representa um antecedente plural.
+    #
+    SUBSTITUICOES = {
+        "he": ["she"],
+        "she": ["he"],
+        "they": ["he", "she"],
+    }
+
+    # ============================================================
+    # 3. FUNÇÕES AUXILIARES
+    # ============================================================
+
+    def normalizar(texto: str) -> str:
+        """Normaliza texto para comparação lexical simples."""
+        return " ".join(texto.lower().strip().split())
+
+    def obter_numero(token) -> Optional[str]:
+        """
+        Retorna o número morfológico de um token quando disponível.
+        Possíveis valores: 'Sing', 'Plur' ou None.
+        """
+        try:
+            valores = token.morph.get("Number")
+        except Exception:
+            return None
+
+        if not valores:
+            return None
+
+        if "Plur" in valores:
+            return "Plur"
+
+        if "Sing" in valores:
+            return "Sing"
+
+        return None
+
+    def chunk_numero(chunk) -> Optional[str]:
+        """
+        Obtém o número morfológico do núcleo de um noun chunk.
+        """
+        try:
+            root = chunk.root
+            return obter_numero(root)
+        except Exception:
+            return None
+
+    def eh_chunk_referencial_valido(chunk) -> bool:
+        """
+        Filtra candidatos a antecedente.
+
+        O antecedente deve:
+        - possuir conteúdo lexical;
+        - não ser uma estrutura excessivamente longa;
+        - não ser um pronome;
+        - possuir núcleo nominal.
+
+        A regra é deliberadamente conservadora.
+        """
+
+        texto = normalizar(chunk.text)
+
+        if not texto:
+            return False
+
+        palavras = texto.split()
+
+        # Evita constituintes excessivamente grandes.
+        if len(palavras) > 8:
+            return False
+
+        # Evita chunks puramente pronominais.
+        if chunk.root.pos_ == "PRON":
+            return False
+
+        return True
+
+    def encontrar_antecedente(
+        sent_idx: int,
+        pronome
+    ):
+        """
+        Procura um antecedente nominal em até duas sentenças anteriores.
+
+        O antecedente mais próximo que:
+        1. não seja pronome;
+        2. seja nominal;
+        3. seja compatível com o número do pronome, quando possível;
+
+        é utilizado como referência.
+
+        Não é um resolvedor geral de correferência. É uma heurística
+        deliberadamente limitada para construção do conjunto controlado.
+        """
+
+        numero_pronome = obter_numero(pronome)
+
+        candidatos_antecedentes = []
+
+        # Procuramos nas duas sentenças anteriores.
+        inicio = max(0, sent_idx - 2)
+
+        for idx in range(sent_idx - 1, inicio - 1, -1):
+            sent_anterior = sentencas[idx]
+
+            for chunk in sent_anterior.noun_chunks:
+                if not eh_chunk_referencial_valido(chunk):
+                    continue
+
+                # Evita chunks que sejam claramente objetos isolados
+                # sem potencial de referência.
+                if chunk.root.pos_ not in {"NOUN", "PROPN"}:
+                    continue
+
+                numero_chunk = chunk_numero(chunk)
+
+                # Primeiro, prioriza compatibilidade de número quando
+                # essa informação estiver disponível em ambos.
+                compatibilidade_numero = (
+                    numero_pronome is not None
+                    and numero_chunk is not None
+                    and numero_pronome == numero_chunk
+                )
+
+                candidatos_antecedentes.append({
+                    "sent_idx": idx,
+                    "chunk": chunk,
+                    "numero": numero_chunk,
+                    "compatibilidade_numero": compatibilidade_numero
+                })
+
+        if not candidatos_antecedentes:
+            return None
+
+        # Prioridade:
+        # 1. compatibilidade de número;
+        # 2. sentença mais recente.
+        candidatos_antecedentes.sort(
+            key=lambda x: (
+                not x["compatibilidade_numero"],
+                -x["sent_idx"]
+            )
+        )
+
+        return candidatos_antecedentes[0]
+
+    def pronome_substituto(pronome_lemma: str) -> Optional[str]:
+        """
+        Seleciona uma substituição controlada.
+        """
+        candidatos = SUBSTITUICOES.get(pronome_lemma.lower())
+
+        if not candidatos:
+            return None
+
+        return random.choice(candidatos)
+
+    def ajustar_capitalizacao(original: str, substituto: str) -> str:
+        """
+        Preserva a capitalização inicial do pronome.
+        """
+        if not original:
+            return substituto
+
+        if original[0].isupper():
+            return substituto.capitalize()
+
+        return substituto.lower()
+
+    # ============================================================
+    # 4. IDENTIFICAÇÃO DOS PRONOMES COM ANTECEDENTE
+    # ============================================================
+
+    candidatos_injecao = []
+
+    for sent_idx, sent in enumerate(sentencas):
+
+        # Máximo de um erro por sentença.
+        candidatos_sentenca = []
+
+        for token in sent:
+
+            lemma = token.lemma_.lower().strip()
+
+            # Somente pronomes sujeitos referenciais.
+            if token.pos_ != "PRON":
+                continue
+
+            if token.dep_ not in {"nsubj", "nsubjpass"}:
+                continue
+
+            if token.tag_ != "PRP":
+                continue
+
+            if lemma not in PRONOMES_ELEGIVEIS:
+                continue
+
+            # Procura antecedente nominal.
+            antecedente = encontrar_antecedente(
+                sent_idx=sent_idx,
+                pronome=token
+            )
+
+            if antecedente is None:
+                continue
+
+            candidatos_sentenca.append({
+                "sent_idx": sent_idx,
+                "sent": sent,
+                "pronome": token,
+                "antecedente": antecedente
+            })
+
+        if candidatos_sentenca:
+            # Apenas um pronome por sentença.
+            escolhido = random.choice(candidatos_sentenca)
+            candidatos_injecao.append(escolhido)
+
+    if not candidatos_injecao:
+        return resumo_orig, 0, []
+
+    # ============================================================
+    # 5. SELEÇÃO DAS SENTENÇAS
+    # ============================================================
+
+    qtd_erros = min(
+        num_erros,
+        len(candidatos_injecao)
+    )
+
+    selecionados = random.sample(
+        candidatos_injecao,
+        qtd_erros
+    )
+
+    # Ordenação reversa para preservar offsets de caracteres.
+    selecionados.sort(
+        key=lambda x: x["pronome"].idx,
+        reverse=True
+    )
+
+    # ============================================================
+    # 6. INJEÇÃO
+    # ============================================================
+
+    resumo_mutavel = resumo_orig
+    erros = []
+
+    for item in selecionados:
+
+        sent_idx = item["sent_idx"]
+        pron = item["pronome"]
+        antecedente_info = item["antecedente"]
+
+        pronome_original = pron.text
+        pronome_lemma = pron.lemma_.lower().strip()
+
+        # Seleciona pronome incompatível.
+        novo_pronome = pronome_substituto(pronome_lemma)
+
+        if novo_pronome is None:
+            continue
+
+        # --------------------------------------------------------
+        # Controle adicional:
+        #
+        # Se "they" possui antecedente singular e a substituição for
+        # he/she, a mudança altera o número da referência.
+        #
+        # Se "he"/"she" possui antecedente e ocorre a troca entre
+        # he <-> she, a alteração mantém a função sintática, mas
+        # modifica a compatibilidade referencial.
+        # --------------------------------------------------------
+
+        numero_antecedente = antecedente_info["numero"]
+        numero_original = obter_numero(pron)
+
+        # Para "they", somente produzimos a alteração quando:
+        # - o antecedente é claramente plural; OU
+        # - o antecedente não permite determinar o número.
+        #
+        # Se o antecedente for claramente singular, "they" pode ser
+        # singular they e a alteração poderia não produzir erro factual
+        # suficientemente claro.
+        if pronome_lemma == "they":
+            if numero_antecedente == "Sing":
+                continue
+
+        replacement = ajustar_capitalizacao(
+            pronome_original,
+            novo_pronome
+        )
+
+        start_char = pron.idx
+        end_char = pron.idx + len(pron.text)
+
+        resumo_mutavel = (
+            resumo_mutavel[:start_char]
+            + replacement
+            + resumo_mutavel[end_char:]
+        )
+
+        antecedente = antecedente_info["chunk"]
+
+        erros.append({
+            "sentenca_index": sent_idx,
+            "pronome_original": pronome_original,
+            "pronome_injetado": replacement,
+            "antecedente_original": antecedente.text,
+            "antecedente_sentenca_index": antecedente_info["sent_idx"],
+            "tipo_erro": "coreference",
+            "estrategia": "pronoun_swap",
+            "numero_pronome_original": numero_original,
+            "numero_antecedente": numero_antecedente,
+        })
+
+    # Como as alterações foram realizadas do final para o início,
+    # os registros são revertidos para manter a ordem textual.
+    erros.reverse()
+
+    return (
+        resumo_mutavel,
+        len(erros),
+        erros
+    )
 
 def normalize_ent(ent):
     return " ".join(ent.lower().strip().split())
@@ -514,11 +920,11 @@ def processar_dataset_erros(dataset_split, num_erros: int = 2, seed: int = 42):
 if __name__ == "__main__":
     print("Iniciando pipeline de geração de erros (V3 - Alta Fidelidade)...")
     dataset = load_dataset("ccdv/govreport-summarization", split="test")
-    amostra = dataset.select(range(10))
+    amostra = dataset.select(range(5))
 
     df = processar_dataset_erros(amostra, num_erros=6, seed=42)
     
-    arquivo_saida = 'Gerador_erros/govreport_erros_pred_corref_entity_realistas_v1.csv'
+    arquivo_saida = 'Gerador_erros/govreport_erros_pred_corref_entity_realistas_v2.csv'
 
     df.to_csv(arquivo_saida, index=False)
     print(f"\n✅ Pipeline concluído! Dataset exportado para: {arquivo_saida}")
